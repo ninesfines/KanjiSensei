@@ -4,6 +4,9 @@ An interactive map of Kanji construction. Start from a kanji, decompose it into
 radicals and components, then jump to every kanji that shares those components —
 discovery-first, not dictionary-first.
 
+**Live: <https://ninesfines.github.io/KanjiSensei/>** — every push to `main`
+auto-deploys via GitHub Actions.
+
 ## Run
 
 ```bash
