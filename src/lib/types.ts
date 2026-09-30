@@ -98,6 +98,25 @@ export interface RadicalFile {
   radicals: RadicalData[];
 }
 
+/** One ordered stroke of a kanji, from KanjiVG path data. */
+export interface StrokeRef {
+  /** 1-based stroke order. */
+  nn: number;
+  /** SVG path `d` in KanjiVG's 109×109 coordinate space. */
+  d: string;
+  /** KanjiVG element (component glyph) this stroke belongs to; "" at root level. */
+  element: string;
+}
+
+/** Per-kanji entry inside a strokes-*.json chunk. */
+export interface StrokesData {
+  kanji: string;
+  strokes: StrokeRef[];
+}
+
+/** Which lazily-loaded stroke chunk a kanji belongs to. */
+export type StrokeChunkKey = JlptLevel | "none";
+
 export type NodeKind = "kanji" | "radical" | "component";
 
 export interface SearchResult {

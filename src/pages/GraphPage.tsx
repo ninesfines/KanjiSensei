@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import cytoscape from "cytoscape";
 import { buildGraph, graphToCytoscapeElements } from "@/lib/graph";
@@ -22,6 +22,19 @@ export default function GraphPage() {
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [tooBig, setTooBig] = useState(false);
+  const [tip, setTip] = useState<null | {
+    id: string;
+    kind: string;
+    name?: string;
+    meaning?: string;
+    x: number;
+    y: number;
+    below: boolean;
+  }>(null);
+  const reduceMotion = useMemo(
+    () => typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches,
+    [],
+  );
 
   useEffect(() => {
     const graph = buildGraph({ kind, character: char }, { limitPerRadical: 16 });
@@ -44,6 +57,8 @@ export default function GraphPage() {
             "background-color": "#1e293b",
             "border-width": 2,
             "border-color": "#7db2f9",
+            "transition-property": "width height border-width font-size",
+            "transition-duration": reduceMotion ? 0 : 120,
           },
         },
         {
@@ -63,6 +78,17 @@ export default function GraphPage() {
           },
         },
         {
+          // hovered node grows + thickens (class toggled from mouseover JS;
+          // Cytoscape has no :hover selector state)
+          selector: "node.hover",
+          style: {
+            width: 56,
+            height: 56,
+            "font-size": 26,
+            "border-width": 3,
+          },
+        },
+        {
           selector: "edge",
           style: {
             width: 1.6,
@@ -79,6 +105,7 @@ export default function GraphPage() {
     }) as cytoscape.Core;
 
     cy.on("tap", "node", (evt) => {
+      setTip(null);
       const id = evt.target.id() as string;
       const nodeKind = evt.target.data("kind");
       navigate(
@@ -86,10 +113,34 @@ export default function GraphPage() {
       );
     });
 
+    cy.on("mouseover", "node", (evt) => {
+      const node = evt.target;
+      node.addClass("hover");
+      const pos = evt.renderedPosition ?? node.renderedPosition();
+      const width = containerRef.current?.getBoundingClientRect().width ?? 500;
+      const maxX = Math.max(160, width - 160);
+      setTip({
+        id: node.id() as string,
+        kind: node.data("kind") as string,
+        name: node.data("name") || undefined,
+        meaning: node.data("meaning") || undefined,
+        x: Math.min(Math.max(pos.x, 160), maxX),
+        y: pos.y,
+        below: pos.y < 100,
+      });
+    });
+    cy.on("mouseout", "node", (evt) => {
+      evt.target.removeClass("hover");
+      setTip(null);
+    });
+
     if (graph.nodes.length > 400) setTooBig(true);
     cyRef.current = cy;
-    return () => void cy.destroy();
-  }, [kind, char, navigate]);
+    return () => {
+      setTip(null);
+      void cy.destroy();
+    };
+  }, [kind, char, navigate, reduceMotion]);
 
   return (
     <article className="graph-page page">
@@ -99,7 +150,21 @@ export default function GraphPage() {
           {kind === "kanji" ? `centered on ${char}` : `centered on ${char}`} — zoom with scroll, pan by dragging, click a node to open it.
         </p>
       </header>
-      <div ref={containerRef} className={tooBig ? "graph-canvas warn" : "graph-canvas"} />
+      <div className="graph-wrap">
+        <div ref={containerRef} className={tooBig ? "graph-canvas warn" : "graph-canvas"} />
+        {tip && (
+          <div
+            className={`graph-tip${tip.below ? " below" : ""}`}
+            style={{ left: tip.x, top: tip.y }}
+            aria-hidden="true"
+          >
+            <span className="tip-char" lang="ja">{tip.id}</span>
+            <span className={`tip-kind kind-${tip.kind}`}>{tip.kind}</span>
+            {tip.name ? <span className="tip-name">{tip.name}</span> : null}
+            {tip.meaning ? <span className="tip-meaning">{tip.meaning}</span> : null}
+          </div>
+        )}
+      </div>
       <div className="legend">
         <span className="legend-item"><i className="dot radical" />radical</span>
         <span className="legend-item"><i className="dot component" />component</span>

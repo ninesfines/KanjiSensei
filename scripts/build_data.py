@@ -153,6 +153,8 @@ class KanjiVgParser:
 
     def __init__(self) -> None:
         self.collected: dict[str, list[dict]] = {}
+        self.stroke_data: dict[str, list[dict]] = {}
+        self._paths: list[dict] = []
         self._cp_to_char: dict[str, str] = {}
         self._cur_char: str | None = None
         self._nodes: list[dict] = []
@@ -170,6 +172,7 @@ class KanjiVgParser:
             self._cur_char = self._cp_to_char.get(key)
             self._in_kanji = True
             self._nodes = []
+            self._paths = []
             self._gstack = []
         elif name == "g" and self._in_kanji:
             node = {
@@ -181,6 +184,19 @@ class KanjiVgParser:
             }
             self._nodes.append(node)
             self._gstack.append(len(self._nodes) - 1)
+        elif name == "path" and self._in_kanji:
+            m = re.search(r"-s(\d+)$", attrs.get("id", ""))
+            d = attrs.get("d") or ""
+            if not (m and d):
+                return
+            # innermost enclosing <g> with a kvg:element ("" when none)
+            el = ""
+            for gi in reversed(self._gstack):
+                e2 = self._nodes[gi]["element"]
+                if e2:
+                    el = e2
+                    break
+            self._paths.append({"nn": int(m.group(1)), "d": d, "element": el})
 
     def _end(self, name: str) -> None:
         if name == "g" and self._in_kanji:
@@ -189,6 +205,7 @@ class KanjiVgParser:
         elif name == "kanji" and self._in_kanji:
             if self._cur_char:
                 self.collected[self._cur_char] = self._nodes
+                self.stroke_data[self._cur_char] = sorted(self._paths, key=lambda p: p["nn"])
             self._in_kanji = False
             self._cur_char = None
 
@@ -313,6 +330,7 @@ def main() -> None:  # PART2-MARKER
     vg._cp_to_char = {f"{ord(ch):X}": ch for ch in app_set}
     structures = vg.parse(RAW / "kanjivg.xml.gz")
     print(f"    parsed structure for {len(structures)} kanji")
+    print(f"    stroke paths for {len(vg.stroke_data)} kanji")
 
     def topmost_positions(char: str, comp_canons: list[str]) -> dict[str, str]:
         out: dict[str, str] = {}
@@ -505,6 +523,29 @@ def main() -> None:  # PART2-MARKER
     )
     print(f"  kanji.json: {len(records)} kanji, {(OUT / 'kanji.json').stat().st_size / 1024:.0f} KB")
 
+    # STROKES-MARKER
+    print("  stroke chunks (kanjivg paths) ...")
+    stroke_buckets: dict[str, list[dict]] = defaultdict(list)
+    missing_strokes: list[str] = []
+    for rec in records:
+        sd = vg.stroke_data.get(rec["kanji"])
+        if sd:
+            stroke_buckets[rec["jlpt"] or "none"].append({"kanji": rec["kanji"], "strokes": sd})
+        else:
+            missing_strokes.append(rec["kanji"])
+    for key in ("n5", "n4", "n3", "n2", "n1", "none"):
+        rows = stroke_buckets.get(key.upper() if key != "none" else "none", [])
+        fname = f"strokes-{key}.json"
+        (OUT / fname).write_text(
+            json.dumps({"version": 1, "generatedAt": generated, "strokes": rows}, ensure_ascii=False, separators=(",", ":")),
+            encoding="utf-8",
+        )
+        print(f"    {fname}: {len(rows)} kanji, {(OUT / fname).stat().st_size / 1024:.0f} KB")
+    covered = len(records) - len(missing_strokes)
+    print(f"    kanjivg stroke coverage: {covered}/{len(records)} ({covered / max(1, len(records)):.1%})")
+    if missing_strokes:
+        print("    no stroke data: " + " ".join(missing_strokes[:12]) + (" …" if len(missing_strokes) > 12 else ""))
+
     # RADICALS-MARKER
     def fam_weight(ch: str):
         jl = jlpt_new_of(ch)
@@ -596,6 +637,16 @@ def main() -> None:  # PART2-MARKER
         assert k in nin["kanji"], f"人 family missing {k}"
     assert kmap["族"]["radical"]["name"], "族 radical name missing"
     print("  ✓ spec examples verified (族/私/家/宀/人)")
+
+    stroke_map = {row["kanji"]: row["strokes"] for rows in stroke_buckets.values() for row in rows}
+    assert len(stroke_map["家"]) == 10, f"家 stroke count = {len(stroke_map['家'])}"
+    assert len(stroke_map["私"]) == 7, f"私 stroke count = {len(stroke_map['私'])}"
+    assert len(stroke_map["族"]) == 11, f"族 stroke count = {len(stroke_map['族'])}"
+    els = {s["element"] for s in stroke_map["家"]}
+    assert "宀" in els and "豕" in els, f"家 stroke groups wrong: {els}"
+    nns = [s["nn"] for s in stroke_map["家"]]
+    assert nns == sorted(nns) and nns[0] == 1 and len(set(nns)) == len(nns), "家 stroke order wrong"
+    print("  ✓ stroke data verified (家=10 私=7 族=11, 宀/豕 groups, ordered)")
     print(f"done in {time.time() - t0:.1f}s")
 
 

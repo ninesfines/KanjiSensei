@@ -92,7 +92,6 @@ a { color: var(--accent); text-decoration: none; }
 .page { animation: rise 0.45s ease both; }
 @keyframes rise { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: none; } }
 @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
-
 .page-head { margin-bottom: 22px; }
 .page-head h1 { margin: 0 0 6px; font-size: 26px; }
 
@@ -276,6 +275,26 @@ a { color: var(--accent); text-decoration: none; }
 .dot.component { background: var(--blue); }
 .dot.kanji { background: #7db2f9; }
 
+/* graph hover tooltip + hover state */
+.graph-wrap { position: relative; }
+.graph-tip {
+  position: absolute; z-index: 5; pointer-events: none;
+  display: flex; align-items: baseline; gap: 8px; flex-wrap: wrap;
+  max-width: 260px; padding: 8px 12px;
+  background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  transform: translate(-50%, calc(-100% - 14px));
+  font-size: 13px; color: var(--text-dim);
+}
+.graph-tip.below { transform: translate(-50%, 14px); }
+.tip-char { font-size: 24px; font-weight: 700; line-height: 1; color: var(--text); }
+.tip-kind { font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-faint); }
+.tip-kind.kind-radical { color: var(--red); }
+.tip-kind.kind-component { color: var(--blue); }
+.tip-kind.kind-kanji { color: var(--accent); }
+.tip-name { color: var(--text); font-weight: 600; }
+.tip-meaning { color: var(--text-dim); }
+
 /* misc */
 .notfound { text-align: center; padding: 60px 0; }
 .notfound-char { font-size: 110px; color: var(--text-faint); }
@@ -293,3 +312,65 @@ a { color: var(--accent); text-decoration: none; }
 @media (max-width: 560px) {
   .kanji-grid { grid-template-columns: repeat(auto-fill, minmax(96px, 1fr)); }
 }
+
+/* stroke-order animation */
+.stroke-wrap { width: 100%; }
+.kanji-hero-char .stroke-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.stroke-svg .stroke {
+  fill: none; stroke: var(--text); stroke-width: 6;
+  stroke-linecap: round; stroke-linejoin: round;
+  transition: opacity 0.15s ease;
+}
+.stroke-svg path.s-radical { stroke: var(--red); }
+.stroke-svg path.s-semantic { stroke: var(--blue); }
+.stroke-svg path.s-phonetic { stroke: var(--purple); }
+.stroke-svg path.dim { opacity: 0.14; }
+.stroke-ctl {
+  display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+  margin-top: 10px; justify-content: center;
+}
+.stroke-btn {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 8px; padding: 4px 10px; font-size: 12px; cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.stroke-btn:hover { color: var(--accent); border-color: var(--accent); }
+.stroke-btn.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.ctl-sep { width: 1px; height: 16px; background: var(--border); margin: 0 4px; }
+.stroke-mode { display: inline-flex; }
+.stroke-mode .stroke-btn:first-child { border-radius: 8px 0 0 8px; }
+.stroke-mode .stroke-btn + .stroke-btn { border-radius: 0 8px 8px 0; margin-left: -1px; }
+.comp-chip.lit { border-color: var(--accent); }
+.stroke-svg.done { animation: stroke-done 0.5s ease; }
+@keyframes stroke-done {
+  0% { transform: scale(1); filter: none; }
+  40% { transform: scale(1.03); filter: drop-shadow(0 0 10px rgba(125, 178, 249, 0.55)); }
+  100% { transform: scale(1); filter: none; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .stroke-svg .stroke { transition: none; }
+}
+/* build-up step strip: recipe preview → active accent → placed recap */
+.buildup-steps {
+  display: flex; align-items: center; justify-content: center; gap: 8px; flex-wrap: wrap;
+  margin: -12px 0 30px; min-height: 40px;
+}
+.step {
+  display: inline-flex; align-items: baseline; gap: 6px;
+  padding: 5px 12px; border: 1px solid var(--border); border-radius: 999px;
+  background: var(--bg-panel); font-size: 13px; color: var(--text-dim);
+  cursor: default; transition: color 0.15s ease, border-color 0.15s ease;
+}
+.step:hover { border-color: var(--accent); }
+.step-n { font-size: 11px; font-weight: 600; color: var(--text-faint); }
+.step-char { font-size: 18px; font-weight: 700; line-height: 1; }
+.step-char.s-radical { color: var(--red); }
+.step-char.s-semantic { color: var(--blue); }
+.step-char.s-phonetic { color: var(--purple); }
+.step-char.s-other { color: var(--text); }
+.step-name { font-size: 12px; color: var(--text-dim); }
+.step-range { font-size: 12px; color: var(--accent); }
+.step.on { border-color: var(--accent); }
+.step.on .step-n { color: var(--accent); }
+.step.on .step-name { color: var(--text); }
+.step.muted { opacity: 0.55; }
