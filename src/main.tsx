@@ -6,7 +6,9 @@ import "./styles.css";
 
 ReactDOM.createRoot(document.getElementById("root")!).render(
   <React.StrictMode>
-    <BrowserRouter>
+    {/* Vite bakes the build base here: "/" in dev, "/KanjiSensei/" on Pages,
+        so routes + <Link>s get the subpath prefix and deep links resolve. */}
+    <BrowserRouter basename={import.meta.env.BASE_URL}>
       <App />
     </BrowserRouter>
   </React.StrictMode>
