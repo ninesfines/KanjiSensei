@@ -1,4 +1,4 @@
-import { Outlet } from "react-router-dom";
+import { Link, Outlet } from "react-router-dom";
 import SearchBar from "./SearchBar";
 
 export default function Layout() {
@@ -6,14 +6,14 @@ export default function Layout() {
     <div className="app">
       <header className="app-header">
         <div className="header-inner">
-          <a href="/" className="brand">
+          <Link to="/" className="brand">
             <span className="brand-kanji">漢</span>
             <span className="brand-name">KanjiSensei</span>
-          </a>
+          </Link>
           <SearchBar />
           <nav className="app-nav">
-            <a href="/browse">Browse</a>
-            <a href="/graph?kind=radical&char=%E5%AE%B8">Graph</a>
+            <Link to="/browse">Browse</Link>
+            <Link to="/graph?kind=radical&char=%E5%AE%B8">Graph</Link>
           </nav>
         </div>
       </header>
