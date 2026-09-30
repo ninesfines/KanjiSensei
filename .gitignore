@@ -2,6 +2,7 @@
 node_modules/
 dist/
 *.log
+*.tsbuildinfo
 
 data_raw/
 !data_raw/.gitkeep
