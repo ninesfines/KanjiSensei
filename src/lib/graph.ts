@@ -76,8 +76,9 @@ export function buildGraph(
   let added = 0;
   for (const k of radical.kanji) {
     if (added >= limit) break;
-    if (!kanjiList.some((x) => x.kanji === k)) continue;
-    addNode(k, "kanji");
+    const kd = getKanji(k);
+    if (!kd) continue; // Map lookup — also replaces the old kanjiList.some() scan
+    addNode(k, "kanji", { meaning: kd.meanings[0] });
     addEdge(radical.character, k, "contains");
     added++;
   }
