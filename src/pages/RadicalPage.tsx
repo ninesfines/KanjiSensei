@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { getKanji, radicalFor } from "@/lib/data";
+import { phoneticSeriesFor } from "@/lib/keisei";
 import { POSITION_DEFS } from "@/lib/types";
 
 const PAGE_SIZE = 60;
@@ -16,6 +17,8 @@ export default function RadicalPage() {
     if (!jōyōOnly) return data.kanji;
     return data.kanji.filter((k) => Boolean(getKanji(k)));
   }, [data, jōyōOnly]);
+
+  const series = useMemo(() => (data ? phoneticSeriesFor(data.character) : null), [data]);
 
   if (!data) {
     return <NotFoundRadical char={char ?? ""} />;
@@ -79,6 +82,50 @@ export default function RadicalPage() {
           <p className="tree-count">{familyFiltered.length} kanji</p>
         )}
       </section>
+
+      {series ? (
+        <section className="panel reverse-tree-panel">
+          <h2 className="panel-title">
+            Phonetic series
+            <span className="panel-sub">
+              {series.key} is the sound-carrier in {series.members.length} kanji
+              {series.scoredCount
+                ? ` — predicts onyomi in ${series.matchCount}/${series.scoredCount}`
+                : " — no on'yomi readings to score"}
+            </span>
+          </h2>
+          <div className="tree-controls">
+            <Link
+              className="btn"
+              to={`/graph?kind=radical&kanji=${encodeURIComponent(series.key)}`}
+            >
+              Graph view
+            </Link>
+          </div>
+          <ul className="reverse-tree">
+            {series.members.map((m) => (
+              <li key={m.kanji} className="tree-item">
+                <span className="tree-dash" aria-hidden>{"\u2514\u2500"}</span>
+                <Link className="tree-kanji" to={`/kanji/${m.kanji}`} lang="ja">{m.kanji}</Link>
+                <span className="tree-sub">
+                  {m.onyomi.length ? (
+                    <span className={`tree-onyomi${m.matches ? " match" : " outlier"}`}>
+                      {m.onyomi.join(" / ")}
+                      {m.matches ? "" : " ≠"}
+                    </span>
+                  ) : (
+                    <span className="tree-onyomi">—</span>
+                  )}
+                  {m.jlpt ? ` · ${m.jlpt}` : ""}
+                </span>
+              </li>
+            ))}
+          </ul>
+          <p className="tree-count">
+            Match rule: exact onyomi or voiced readings (dakuten/handakuten)
+          </p>
+        </section>
+      ) : null}
     </article>
   );
 }

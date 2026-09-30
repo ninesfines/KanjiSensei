@@ -1,7 +1,8 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getKanji } from "@/lib/data";
+import { getKanji, radicalFor } from "@/lib/data";
 import { getStrokes, roleMapFor, strokeGroups } from "@/lib/strokes";
+import { phoneticSeriesFor } from "@/lib/keisei";
 import { POSITION_DEFS, type ComponentRef } from "@/lib/types";
 import type { ComponentRole, StrokesData } from "@/lib/types";
 import StrokeSvg from "@/components/StrokeSvg";
@@ -206,6 +207,11 @@ function ComponentBreakdown({
   highlightKey: string | null;
   onHoverKey: (key: string | null) => void;
 }) {
+  // discovery hook for the phonetic series: only for components that exist as
+  // radicals.json entries (13 keisei canonicals have no radical page).
+  const phon = data.components.find((c) => c.role === "phonetic");
+  const series = phon ? phoneticSeriesFor(phon.canonical) : null;
+  const hint = phon && series && radicalFor(phon.canonical);
   return (
     <section className="panel">
       <h2 className="panel-title">Component breakdown</h2>
@@ -219,6 +225,19 @@ function ComponentBreakdown({
           />
         ))}
       </div>
+      {hint ? (
+        <p className="phonetic-hint">
+          Reading hint: <span lang="ja">{phon!.character}</span> is the phonetic
+          here —{" "}
+          <Link to={`/radical/${phon!.canonical}`}>
+            the {phon!.character} series ({series!.members.length} kanji
+            {series!.scoredCount
+              ? `, ${series!.matchCount}/${series!.scoredCount} predictable`
+              : ""}
+            )
+          </Link>
+        </p>
+      ) : null}
     </section>
   );
 }

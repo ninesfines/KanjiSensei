@@ -25,10 +25,13 @@ Effort key: **S** = hours · **M** = 1–2 days · **L** = multi-session
 - [ ] **Component composer** (S, frontend only)
   Pick 2–3 components → every kanji built from that set (宀 + 豕). Uses the
   existing variant canonicalization (亻→人) and reverse indexes.
-- [ ] **Phonetic series explorer** (S–M, frontend only)
-  Page listing all kanji that use a given component as phonetic (`role:
-  "phonetic"` is already derived from kvg:phon + kanjium), with a "% of kanji
-  where it predicts the onyomi" signal. Unique among kanji apps.
+- [x] **Phonetic series explorer** (S–M, frontend only) — **DONE 2026-09-30.**
+  Conditional "Phonetic series" panel on RadicalPage (series members with
+  onyomi, ✓/≠ match flags, reliability stat, Graph view) + a reading-hint
+  line on KanjiPage for kanji with a phonetic component. Match rule: exact
+  onyomi or voiced readings (dakuten/handakuten); non-standalone components
+  fall back to the series' dominant onyomi. New `src/lib/keisei.ts`; 98
+  series, 214 member kanji, no pipeline changes.
 - [ ] **Lookalike kanji finder** (S–M)
   Kanji sharing ≥2 components → confusable pairs (未/末, 完/冠). Natural
   extension of `src/lib/graph.ts`.
