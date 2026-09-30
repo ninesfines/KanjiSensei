@@ -23,6 +23,9 @@ jobs:
       - run: npm run build
       - name: SPA deep-link fallback
         run: cp dist/index.html dist/404.html
+      - uses: actions/configure-pages@v5
+        with:
+          enablement: true # creates the Pages site + sets build_type=workflow automatically
       - uses: actions/upload-pages-artifact@v3
         with:
           path: dist
