@@ -190,6 +190,7 @@ function Studio({
         <div className="practice-stage">
           {ghost ? <GlyphSvg strokes={item.strokes} opacity={0.14} /> : null}
           <PracticeCanvas
+            key={`${item.char}-${session.index}`}
             model={item.strokes}
             clearNonce={clearNonce}
             undoNonce={undoNonce}

@@ -65,9 +65,12 @@ export default function PracticeCanvas({ model, clearNonce, undoNonce, onStrokeC
       redraw();
     };
     resize();
+    // fresh mounts start empty — report that immediately so the counter resets
+    onStrokeCountChange(inkRef.current.length);
     const ro = new ResizeObserver(resize);
     ro.observe(canvas);
     return () => ro.disconnect();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
