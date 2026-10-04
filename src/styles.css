@@ -383,3 +383,65 @@ a { color: var(--accent); text-decoration: none; }
 .step.on .step-n { color: var(--accent); }
 .step.on .step-name { color: var(--text); }
 .step.muted { opacity: 0.55; }
+
+/* practice (writing study) */
+.practice-page { max-width: 640px; margin: 0 auto; }
+.practice-jump { display: flex; gap: 8px; margin: 10px 0 18px; }
+.practice-jump input {
+  flex: 1; background: var(--bg-panel); border: 1px solid var(--border);
+  border-radius: 10px; padding: 10px 14px; color: var(--text); font-size: 14px;
+}
+.practice-jump input:focus { outline: 2px solid var(--accent); border-color: transparent; }
+.practice-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 10px; margin-bottom: 14px; }
+.practice-card {
+  display: grid; justify-items: center; gap: 3px; padding: 22px 10px 16px;
+  background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+  text-align: center; transition: transform 0.18s ease, border-color 0.18s ease;
+}
+.practice-card:hover { transform: translateY(-3px); border-color: var(--accent); }
+.practice-card-char { font-size: 46px; line-height: 1; color: var(--red); font-weight: 700; }
+.practice-card-label { font-weight: 600; color: var(--text); font-size: 14.5px; }
+.practice-card-note { font-size: 12px; color: var(--text-faint); }
+.practice-jlpt { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-bottom: 16px; }
+.practice-details { margin: 10px 0; }
+.practice-details summary { cursor: pointer; color: var(--text-dim); font-size: 13.5px; padding: 6px 0; }
+.practice-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(56px, 1fr)); gap: 7px; margin: 10px 0; }
+.practice-cell {
+  display: flex; flex-direction: column; align-items: center; gap: 2px;
+  padding: 9px 2px 7px; background: var(--bg-elevated);
+  border: 1px solid var(--border); border-radius: 10px; transition: border-color 0.15s ease;
+}
+.practice-cell:hover { border-color: var(--accent); }
+.practice-cell .g { font-size: 27px; line-height: 1; color: var(--text); }
+.practice-cell .rom { font-size: 10.5px; color: var(--text-faint); }
+.practice-cell.smallish .g { font-size: 20px; color: var(--text-dim); }
+.practice-cell.good { border-color: var(--accent); }
+.practice-cell.retry { border-color: var(--red); }
+.practice-panel { padding: 18px; }
+.practice-info { display: flex; align-items: baseline; gap: 12px; justify-content: center; flex-wrap: wrap; }
+.practice-char { font-size: 40px; font-weight: 700; line-height: 1; color: var(--red); }
+.practice-meta { font-size: 13px; color: var(--text-dim); }
+.practice-model { width: 130px; margin: 12px auto 0; }
+.practice-model .stroke-svg { width: 100%; height: auto; display: block; }
+.practice-stage {
+  position: relative; width: min(92vw, 380px); aspect-ratio: 1;
+  margin: 14px auto 0; background: color-mix(in srgb, var(--bg-panel) 70%, black);
+  border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden;
+}
+.practice-canvas { position: absolute; inset: 0; width: 100%; height: 100%; touch-action: none; cursor: crosshair; }
+.glyph-svg { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; }
+.glyph-svg path { fill: none; stroke: var(--text); stroke-width: 6; stroke-linecap: round; stroke-linejoin: round; }
+.practice-ctl { display: flex; align-items: center; gap: 7px; flex-wrap: wrap; justify-content: center; margin-top: 14px; }
+.practice-ctl button {
+  background: none; border: 1px solid var(--border); color: var(--text-dim);
+  border-radius: 8px; padding: 7px 12px; font-size: 13px; cursor: pointer;
+  transition: color 0.15s ease, border-color 0.15s ease;
+}
+.practice-ctl button:hover { color: var(--accent); border-color: var(--accent); }
+.practice-ctl button.on { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 50%, transparent); }
+.practice-ctl button.good { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 40%, transparent); }
+.practice-ctl button.bad { color: var(--red); border-color: color-mix(in srgb, var(--red) 40%, transparent); }
+.practice-ctl button:disabled { opacity: 0.5; cursor: default; }
+.practice-count { font-size: 12.5px; color: var(--text-faint); }
+.practice-count.over { color: var(--red); }
+.practice-back { text-align: center; margin: 18px 0 0; }

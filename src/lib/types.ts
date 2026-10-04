@@ -117,6 +117,23 @@ export interface StrokesData {
 /** Which lazily-loaded stroke chunk a kanji belongs to. */
 export type StrokeChunkKey = JlptLevel | "none";
 
+/** Row in src/data/kana.json — practice data for hiragana/katakana. */
+export interface KanaData {
+  char: string;
+  kind: "hiragana" | "katakana";
+  romaji: string;
+  strokes: StrokeRef[];
+}
+
+export type KanaKind = KanaData["kind"];
+
+/** one item of a practice session queue */
+export interface PracticeItem {
+  char: string;
+  kind: "kanji" | "kana";
+  strokes: StrokeRef[];
+}
+
 export type NodeKind = "kanji" | "radical" | "component";
 
 export interface SearchResult {

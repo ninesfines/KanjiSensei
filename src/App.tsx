@@ -8,6 +8,7 @@ import BrowsePage from "./pages/BrowsePage";
 import NotFound from "./pages/NotFound";
 
 const GraphPage = lazy(() => import("./pages/GraphPage"));
+const PracticePage = lazy(() => import("./pages/PracticePage"));
 
 export default function App() {
   return (
@@ -22,6 +23,14 @@ export default function App() {
           element={
             <Suspense fallback={<div className="page muted">Loading graph…</div>}>
               <GraphPage />
+            </Suspense>
+          }
+        />
+        <Route
+          path="/practice"
+          element={
+            <Suspense fallback={<div className="page muted">Loading practice…</div>}>
+              <PracticePage />
             </Suspense>
           }
         />

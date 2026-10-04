@@ -14,6 +14,7 @@ export default function Layout() {
           <nav className="app-nav">
             <Link to="/browse">Browse</Link>
             <Link to="/graph?kind=radical&char=%E5%AE%B8">Graph</Link>
+            <Link to="/practice">Practice</Link>
           </nav>
         </div>
       </header>

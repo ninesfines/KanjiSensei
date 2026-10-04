@@ -61,6 +61,9 @@ export default function RadicalPage() {
           <Link className="btn" to={`/graph?kind=radical&kanji=${encodeURIComponent(data.character)}`}>
             Graph view
           </Link>
+          <Link className="btn" to={`/practice?family=${encodeURIComponent(data.character)}`}>
+            Practice family
+          </Link>
         </div>
         <ul className="reverse-tree">
           {familyFiltered.slice(0, limit).map((k) => {
@@ -100,6 +103,9 @@ export default function RadicalPage() {
               to={`/graph?kind=radical&kanji=${encodeURIComponent(series.key)}`}
             >
               Graph view
+            </Link>
+            <Link className="btn" to={`/practice?series=${encodeURIComponent(series.key)}`}>
+              Practice series
             </Link>
           </div>
           <ul className="reverse-tree">

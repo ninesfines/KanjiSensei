@@ -50,6 +50,14 @@ Effort key: **S** = hours · **M** = 1–2 days · **L** = multi-session
 
 ## 🎓 Study (extends the planned study/ module)
 
+- [x] **Writing practice section** (M) — **DONE 2026-10-02.** New "Practice"
+  nav item + `/practice`: draw kanji and kana from animated models
+  (self-check: reveal overlay + knew-it/try-again/skip; session stats,
+  "re-practice the retries" recap). Kana stroke data now shipped from the
+  pipeline (`kana.json`, 86 hiragana + 90 katakana from KanjiVG with romaji);
+  practice-by-radical-family and phonetic-series seeding links; jump-to-glyph
+  search + `?char=` deep links. Auto-scoring deferred to phase 2.
+
 - [ ] **Build-a-kanji quiz** (S–M, pure frontend)
   Swap of the explorer: given components, pick/assemble the kanji they form.
   Thematically perfect for this app.

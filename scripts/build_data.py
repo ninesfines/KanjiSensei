@@ -66,6 +66,21 @@ _BASE = {
     "ん": "n", "ー": "-", "-": "",
 }
 
+_KATA_EXTRA = {"ヵ": "ka", "ヶ": "ke", "ヷ": "va", "ヸ": "vu", "ヹ": "ve", "ヺ": "vo"}
+
+
+def kana_romaji(ch: str) -> str:
+    """romaji for kana.json (practice grids); "" = no label (small variants)."""
+    ch0 = ch[0]
+    if ch0 in _KATA_EXTRA:
+        return _KATA_EXTRA[ch0]
+    cp = ord(ch0)
+    if 0x30A1 <= cp <= 0x30F6:  # katakana -> hiragana mirror (- 0x60)
+        hira = chr(cp - 0x60)
+        if 0x3041 <= ord(hira) <= 0x3096:
+            return _BASE.get(hira, "")
+    return _BASE.get(ch, "")
+
 
 def hira_to_romaji(text: str) -> str:
     out = []
@@ -154,9 +169,11 @@ class KanjiVgParser:
     def __init__(self) -> None:
         self.collected: dict[str, list[dict]] = {}
         self.stroke_data: dict[str, list[dict]] = {}
+        self.kana_data: dict[str, list[dict]] = {}
         self._paths: list[dict] = []
         self._cp_to_char: dict[str, str] = {}
         self._cur_char: str | None = None
+        self._cur_cp = 0
         self._nodes: list[dict] = []
         self._gstack: list[int] = []
         self._in_kanji = False
@@ -170,6 +187,7 @@ class KanjiVgParser:
             key = hexcp.group(0).upper() if hexcp else ""
             key = key.lstrip("0") or "0"
             self._cur_char = self._cp_to_char.get(key)
+            self._cur_cp = int(key, 16) if key else 0
             self._in_kanji = True
             self._nodes = []
             self._paths = []
@@ -206,6 +224,10 @@ class KanjiVgParser:
             if self._cur_char:
                 self.collected[self._cur_char] = self._nodes
                 self.stroke_data[self._cur_char] = sorted(self._paths, key=lambda p: p["nn"])
+            elif (0x3041 <= self._cur_cp <= 0x3096) or (0x30A1 <= self._cur_cp <= 0x30FA):
+                # kana (hiragana/katakana) — same stroke format, separate bucket
+                if self._paths:
+                    self.kana_data[chr(self._cur_cp)] = sorted(self._paths, key=lambda p: p["nn"])
             self._in_kanji = False
             self._cur_char = None
 
@@ -545,6 +567,27 @@ def main() -> None:  # PART2-MARKER
     print(f"    kanjivg stroke coverage: {covered}/{len(records)} ({covered / max(1, len(records)):.1%})")
     if missing_strokes:
         print("    no stroke data: " + " ".join(missing_strokes[:12]) + (" …" if len(missing_strokes) > 12 else ""))
+
+    # KANA-MARKER
+    print("  kana (hiragana/katakana from kanjivg) ...")
+    kana_records = []
+    for kana_ch in sorted(vg.kana_data.keys()):
+        kana_records.append({
+            "char": kana_ch,
+            "kind": "hiragana" if ord(kana_ch) <= 0x3096 else "katakana",
+            "romaji": kana_romaji(kana_ch),
+            "strokes": vg.kana_data[kana_ch],
+        })
+    (OUT / "kana.json").write_text(
+        json.dumps({"version": 1, "generatedAt": generated, "kana": kana_records}, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    n_hira = sum(1 for k in kana_records if k["kind"] == "hiragana")
+    print(f"    kana.json: {n_hira} hiragana + {len(kana_records) - n_hira} katakana, {(OUT / 'kana.json').stat().st_size / 1024:.1f} KB")
+    for chk, want in (("あ", 3), ("い", 2), ("が", 5), ("ア", 2), ("イ", 2), ("ン", 2)):
+        assert chk in vg.kana_data and len(vg.kana_data[chk]) == want, f"{chk} strokes != {want}"
+    assert kana_romaji("あ") == "a" and kana_romaji("ア") == "a" and kana_romaji("ガ") == "ga" and kana_romaji("ヷ") == "va"
+    print("  ✓ kana data verified (あ3 い2 が5 ア2 ン2, romaji table)")
 
     # RADICALS-MARKER
     def fam_weight(ch: str):
