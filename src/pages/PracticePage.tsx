@@ -6,6 +6,8 @@ import PracticeCanvas from "@/components/PracticeCanvas";
 import { getKana, kanaGrid, kanaList } from "@/lib/kana";
 import { getKanji } from "@/lib/data";
 import { roleMapFor } from "@/lib/strokes";
+import { scoreStroke, verdictOf, allScoresOk } from "@/lib/score";
+import type { StrokeScore, Pt as InkPt } from "@/lib/score";
 import type { PracticeItem } from "@/lib/types";
 import type { KanjiData, KanaData } from "@/lib/types";
 import {
@@ -153,7 +155,16 @@ function Studio({
   const [hint, setHint] = useState(false);
   const [reveal, setReveal] = useState(false);
   const [drawn, setDrawn] = useState(0);
+  const [strokeScores, setStrokeScores] = useState<Array<StrokeScore | undefined>>([]);
   const overdrawn = drawn > item.strokes.length;
+
+  // per-glyph reset when the queue advances: scores clear; hint/reveal clear
+  // (they'd spoil the next glyph); ghost persists (passive underlay)
+  useEffect(() => {
+    setStrokeScores([]);
+    setHint(false);
+    setReveal(false);
+  }, [item.char, session.index]);
 
   const knewIt = () => setSession(markGood(session, item.char));
   const retry = () => {
@@ -191,10 +202,19 @@ function Studio({
           {ghost ? <GlyphSvg strokes={item.strokes} opacity={0.14} /> : null}
           <PracticeCanvas
             key={`${item.char}-${session.index}`}
-            model={item.strokes}
             clearNonce={clearNonce}
             undoNonce={undoNonce}
             onStrokeCountChange={setDrawn}
+            onStrokeEnd={(ink: InkPt[][]) => {
+              const idx = ink.length - 1; // finalized stroke — pair with expected in order
+              const score = scoreStroke(ink[idx] ?? [], item.strokes[idx]);
+              if (!score) return;
+              setStrokeScores((prev) => {
+                const cp = [...prev];
+                cp[idx] = score;
+                return cp;
+              });
+            }}
           />
           {hint ? <GlyphSvg strokes={item.strokes} limit={hintLimit} opacity={0.4} /> : null}
           {reveal ? <GlyphSvg strokes={item.strokes} opacity={0.85} /> : null}
@@ -205,12 +225,19 @@ function Studio({
           <span className={`practice-count${overdrawn ? " over" : ""}`}>
             {drawn} of {item.strokes.length} strokes
           </span>
+          <span className="practice-verdicts" aria-label="per-stroke verdicts">
+            {strokeScores.map((sc, i) =>
+              i < drawn ? (
+                <em key={i} className={`v-${verdictOf(sc)}`}>{i + 1}</em>
+              ) : null,
+            )}
+          </span>
           <span className="ctl-sep" aria-hidden />
           <button type="button" className={ghost ? "on" : ""} onClick={() => setGhost((v) => !v)}>ghost</button>
           <button type="button" className={hint ? "on" : ""} onClick={() => setHint((v) => !v)}>hint</button>
           <button type="button" className={reveal ? "on" : ""} onClick={() => setReveal((v) => !v)}>reveal</button>
           <span className="ctl-sep" aria-hidden />
-          <button type="button" className="good" onClick={knewIt}>✓ knew it</button>
+          <button type="button" className={`good${allScoresOk(strokeScores, item.strokes.length) ? " pulse" : ""}`} onClick={knewIt}>✓ knew it</button>
           <button type="button" className="bad" onClick={retry}>↻ try again</button>
           <button type="button" onClick={skip}>skip →</button>
         </div>

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import type { StrokeRef } from "@/lib/types";
 
 interface Props {
-  model: StrokeRef[];
   clearNonce: number;
   undoNonce: number;
   onStrokeCountChange: (n: number) => void;
+  /** fired on every finalized stroke with the full ink snapshot (0..1). */
+  onStrokeEnd?: (ink: Pt[][]) => void;
 }
 
 interface Pt {
@@ -17,11 +17,12 @@ const INK = "#7db2f9";
 
 /** freehand drawing surface — pointer events (finger/mouse/pen), offline.
  *  Ink stored as normalized point arrays so phase-2 scoring can reuse it. */
-export default function PracticeCanvas({ model, clearNonce, undoNonce, onStrokeCountChange }: Props) {
+export default function PracticeCanvas({ clearNonce, undoNonce, onStrokeCountChange, onStrokeEnd }: Props) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const inkRef = useRef<Pt[][]>([]);
   const activeRef = useRef<number | null>(null);
-  void model;
+  const endRef = useRef(onStrokeEnd);
+  endRef.current = onStrokeEnd;
 
   const redraw = () => {
     const canvas = canvasRef.current;
@@ -115,6 +116,8 @@ export default function PracticeCanvas({ model, clearNonce, undoNonce, onStrokeC
         if (activeRef.current !== e.pointerId) return;
         activeRef.current = null;
         redraw();
+        // finalized stroke — hand the full ink snapshot to the scorer
+        endRef.current?.(inkRef.current.map((s) => s.map((p) => ({ ...p }))));
       }}
       onPointerCancel={() => {
         // a stroke cut short by a system gesture still counts as attempted

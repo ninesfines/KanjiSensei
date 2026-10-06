@@ -57,6 +57,10 @@ Effort key: **S** = hours · **M** = 1–2 days · **L** = multi-session
   pipeline (`kana.json`, 86 hiragana + 90 katakana from KanjiVG with romaji);
   practice-by-radical-family and phonetic-series seeding links; jump-to-glyph
   search + `?char=` deep links. Auto-scoring deferred to phase 2.
+  Phase 2 DONE 2026-10-06: offline heuristic auto-scoring (`lib/score.ts`) —
+  per-stroke chips (✓ exact / ⇄ reversed / ✗ off) in-draw-order against the
+  KanjiVG ideal geometry + knew-it suggestion pulse; final judgment stays
+  with the user.
 
 - [ ] **Build-a-kanji quiz** (S–M, pure frontend)
   Swap of the explorer: given components, pick/assemble the kanji they form.
