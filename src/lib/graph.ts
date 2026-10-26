@@ -1,5 +1,5 @@
 import type { KanjiData, RadicalData } from "./types";
-import { kanjiList, radicalFor, variantToKey, getKanji } from "./data";
+import { kanjiList, radicalFor, variantToKey, getKanji, kanjiPrimaryMeaning, radicalMeaning, componentMeaning } from "./data";
 
 export interface GraphNode {
   id: string;
@@ -22,9 +22,10 @@ export interface GraphEdge {
  */
 export function buildGraph(
   root: { kind: "kanji" | "radical"; character: string },
-  opts: { limitPerRadical?: number } = {}
+  opts: { limitPerRadical?: number; language?: "en" | "es" } = {}
 ): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const limit = opts.limitPerRadical ?? 24;
+  const language = opts.language ?? "en";
   const nodes = new Map<string, GraphNode>();
   const edges: GraphEdge[] = [];
   const seenEdge = new Set<string>();
@@ -43,13 +44,13 @@ export function buildGraph(
   if (root.kind === "kanji") {
     const kanji = kanjiList.find((k) => k.kanji === root.character);
     if (!kanji) return { nodes: [], edges: [] };
-    addNode(kanji.kanji, "kanji", { meaning: kanji.meanings[0] });
+    addNode(kanji.kanji, "kanji", { meaning: kanjiPrimaryMeaning(kanji, language) });
     for (const c of kanji.components) {
       const key = variantToKey.get(c.character) ?? c.canonical;
       const label = c.character;
       addNode(label, c.role === "radical" ? "radical" : "component", {
         name: c.name || undefined,
-        meaning: c.meaning || undefined,
+        meaning: componentMeaning(c, language) || undefined,
       });
       addEdge(label, kanji.kanji, "contains");
       // connect sibling kanji that share this component
@@ -58,7 +59,7 @@ export function buildGraph(
       for (const other of famList) {
         if (added >= limit) break;
         if (other === kanji.kanji) continue;
-        addNode(other, "kanji", { meaning: getKanji(other)?.meanings[0] });
+        addNode(other, "kanji", { meaning: kanjiPrimaryMeaning(getKanji(other), language) });
         addEdge(label, other, "contains");
         added++;
       }
@@ -71,14 +72,14 @@ export function buildGraph(
   if (!radical) return { nodes: [], edges: [] };
   addNode(radical.character, "radical", {
     name: radical.name || undefined,
-    meaning: radical.meaning || undefined,
+    meaning: radicalMeaning(radical, language) || undefined,
   });
   let added = 0;
   for (const k of radical.kanji) {
     if (added >= limit) break;
     const kd = getKanji(k);
     if (!kd) continue; // Map lookup — also replaces the old kanjiList.some() scan
-    addNode(k, "kanji", { meaning: kd.meanings[0] });
+    addNode(k, "kanji", { meaning: kanjiPrimaryMeaning(kd, language) });
     addEdge(radical.character, k, "contains");
     added++;
   }
@@ -92,7 +93,7 @@ export function buildGraph(
     const rad = radicalFor(rkey);
     addNode(rkey, "radical", {
       name: rad?.name || undefined,
-      meaning: rad?.meaning || undefined,
+      meaning: rad ? radicalMeaning(rad, language) : undefined,
     });
     addEdge(rkey, id, "uses");
   }

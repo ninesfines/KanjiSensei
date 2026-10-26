@@ -1,9 +1,11 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
-import { radicalsGroupedByStroke, kanjiList } from "@/lib/data";
+import { radicalsGroupedByStroke, kanjiList, radicalMeaning } from "@/lib/data";
 import { appFamilyCount } from "@/lib/family";
+import { useI18n } from "@/lib/i18n";
 
 export default function BrowsePage() {
+  const { language, t } = useI18n();
   const groups = radicalsGroupedByStroke();
   const [query, setQuery] = useState("");
   const q = query.trim().toLowerCase();
@@ -14,7 +16,7 @@ export default function BrowsePage() {
       if (!q) return true;
       return list.some((r) =>
         r.name.toLowerCase().includes(q) ||
-        r.meaning.toLowerCase().includes(q) ||
+        radicalMeaning(r, language).toLowerCase().includes(q) ||
         r.character.includes(q) ||
         r.names.some((n) => n.startsWith(q))
       );
@@ -23,13 +25,14 @@ export default function BrowsePage() {
   return (
     <article className="browse-page page">
       <header className="page-head">
-        <h1>Browse by radical</h1>
+        <h1>{t("home.radicals")}</h1>
         <p className="muted">
-          {kanjiList.length.toLocaleString()} kanji organized under radical and component families.
+          {t("browse.description", { count: kanjiList.length.toLocaleString() })}
         </p>
         <input
           className="browse-filter"
-          placeholder="Filter radicals (name, meaning, character)…"
+          placeholder={t("browse.filter")}
+          aria-label={t("browse.filter")}
           value={query}
           onChange={(e) => setQuery(e.target.value)}
         />
@@ -37,7 +40,7 @@ export default function BrowsePage() {
 
       {shown.map(([strokes, list]) => (
         <section key={strokes} className="panel">
-          <h2 className="panel-title">{strokes} {strokes === 1 ? "stroke" : "strokes"}</h2>
+          <h2 className="panel-title">{strokes} {strokes === 1 ? t("browse.stroke") : t("browse.strokes")}</h2>
           <div className="family-grid">
             {list.map((r) => (
               <Link
@@ -48,7 +51,7 @@ export default function BrowsePage() {
                 <span className="family-char" lang="ja">{r.variant !== r.character ? r.variant : r.character}</span>
                 <span className="family-meta">
                   <span className="family-name">{r.name}</span>
-                  <span className="family-count">{appFamilyCount(r.character)} kanji</span>
+                  <span className="family-count">{appFamilyCount(r.character)} {t("unit.kanji")}</span>
                 </span>
                 <span className="family-preview">
                   {r.kanji.slice(0, 5).map((k) => (
@@ -61,7 +64,7 @@ export default function BrowsePage() {
         </section>
       ))}
 
-      {shown.length === 0 ? <p className="muted">No radical matches “{query}”.</p> : null}
+      {shown.length === 0 ? <p className="muted">{t("browse.noMatches", { query })}</p> : null}
     </article>
   );
 }

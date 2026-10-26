@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { search, type SearchHit } from "@/lib/search";
+import { useI18n } from "@/lib/i18n";
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -8,6 +9,7 @@ export default function SearchBar() {
   const [open, setOpen] = useState(false);
   const [active, setActive] = useState(0);
   const navigate = useNavigate();
+  const { language, t } = useI18n();
   const boxRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
@@ -18,13 +20,13 @@ export default function SearchBar() {
       return;
     }
     const t = setTimeout(() => {
-      const res = search(q, 12);
+      const res = search(q, 12, language);
       setHits(res.hits);
       setOpen(res.hits.length > 0);
       setActive(0);
     }, 120);
     return () => clearTimeout(t);
-  }, [query]);
+  }, [query, language]);
 
   useEffect(() => {
     const onDoc = (e: MouseEvent) => {
@@ -41,7 +43,13 @@ export default function SearchBar() {
       <input
         className="search-input"
         type="text"
-        placeholder="Search kanji, meaning, reading, radical…"
+        role="combobox"
+        aria-autocomplete="list"
+        aria-expanded={open}
+        aria-controls={open ? "kanji-search-results" : undefined}
+        aria-activedescendant={open && hits.length ? `kanji-search-result-${active}` : undefined}
+        placeholder={t("search.placeholder")}
+        aria-label={t("search.placeholder")}
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         onFocus={(e) => setOpen(e.currentTarget.value.trim().length > 0)}
@@ -71,9 +79,12 @@ export default function SearchBar() {
         }}
       />
       {open && (
-        <ul className="search-results" role="listbox" aria-label="search results">
+        <ul id="kanji-search-results" className="search-results" role="listbox" aria-label={t("search.results")}>
           {hits.map((hit, i) => (
             <li
+              id={`kanji-search-result-${i}`}
+              role="option"
+              aria-selected={i === active}
               key={`${hit.kind}:${hit.key}:${i}`}
               className={i === active ? "result active" : "result"}
               onMouseEnter={() => setActive(i)}
@@ -83,8 +94,9 @@ export default function SearchBar() {
                 navigate(hit.kind === "kanji" ? `/kanji/${hit.character}` : `/radical/${hit.key}`);
               }}
             >
-              <span className={`result-char kind-${hit.kind}`}>{hit.character}</span>
-              <span className="result-text">{hit.sub}</span>
+              <span className={`result-char kind-${hit.kind}`} lang="ja">{hit.character}</span>
+              {hit.sub ? <span className="result-kind">{hit.sub}</span> : null}
+              {hit.meaning ? <span className="result-meaning" title={hit.meaning}>{hit.meaning}</span> : null}
             </li>
           ))}
         </ul>

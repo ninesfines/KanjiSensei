@@ -1,9 +1,35 @@
-import type { JlptLevel, KanjiData, RadicalData } from "./types";
+import type { ComponentRef, JlptLevel, KanjiData, RadicalData } from "./types";
 import kanjiFile from "@/data/kanji.json";
+import kanjiEsFile from "@/data/kanji-es.json";
 import radicalsFile from "@/data/radicals.json";
+import { RADICAL_ES } from "./radical-es";
 
 export const kanjiList = kanjiFile.kanji as unknown as KanjiData[];
 export const radicals = radicalsFile.radicals as unknown as RadicalData[];
+const kanjiEs = kanjiEsFile.kanji as Record<string, string[]>;
+
+export function hasSpanishKanjiMeaning(k: KanjiData): boolean {
+  return Boolean(kanjiEs[k.kanji]?.length);
+}
+
+/** Localized kanji glosses; English is retained when Spanish is unavailable. */
+export function kanjiMeanings(k: KanjiData, language: "en" | "es"): string[] {
+  return language === "es" && kanjiEs[k.kanji]?.length ? kanjiEs[k.kanji] : k.meanings;
+}
+
+export function kanjiPrimaryMeaning(k: KanjiData | undefined, language: "en" | "es"): string | undefined {
+  return k ? kanjiMeanings(k, language)[0] : undefined;
+}
+
+export function radicalMeaning(r: RadicalData, language: "en" | "es"): string {
+  if (language !== "es") return r.meaning;
+  return RADICAL_ES[r.character] ?? kanjiEs[r.character]?.[0] ?? r.meaning;
+}
+
+export function componentMeaning(c: ComponentRef, language: "en" | "es"): string {
+  if (language !== "es") return c.meaning;
+  return RADICAL_ES[c.canonical] ?? kanjiEs[c.canonical]?.[0] ?? c.meaning;
+}
 
 const kanjiByChar = new Map(kanjiList.map((k) => [k.kanji, k]));
 

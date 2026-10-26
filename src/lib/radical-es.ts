@@ -1,0 +1,27 @@
+/** Short learner-facing labels for radicals absent from the app's kanji set.
+ * Other radicals use their Spanish KANJIDIC meaning where available. */
+export const RADICAL_ES: Record<string, string> = {
+  "丨": "línea", "丶": "punto", "丿": "trazo diagonal", "亅": "gancho",
+  "亠": "tapa", "儿": "piernas", "冂": "territorio abierto", "冖": "cubierta",
+  "冫": "hielo", "几": "mesa", "凵": "recipiente abierto", "勹": "envolver",
+  "匕": "cuchara", "匚": "caja", "匸": "recinto oculto", "卜": "adivinación",
+  "卩": "arrodillarse", "厂": "acantilado", "厶": "privado", "囗": "recinto",
+  "夂": "avanzar despacio", "夊": "avanzar despacio", "宀": "techo", "尢": "cojo",
+  "尸": "cadáver", "屮": "brote", "巛": "río", "幺": "pequeño",
+  "广": "casa sobre un acantilado", "廴": "zancada larga", "廾": "dos manos",
+  "弋": "disparar una flecha", "彑": "hocico de cerdo", "彡": "pelo",
+  "彳": "paso", "戈": "lanza", "戶": "puerta", "攴": "golpear",
+  "无": "perecer", "曰": "decir", "歹": "muerte", "殳": "arma",
+  "毋": "madre; no", "气": "vapor", "爻": "cruzar", "爿": "madera partida",
+  "瓜": "melón", "疋": "rollo de tela", "疒": "enfermedad", "癶": "huellas",
+  "禸": "rastro", "禾": "cereal", "网": "red", "而": "barba",
+  "耒": "arado", "聿": "pincel", "舛": "opuesto", "艮": "detenerse",
+  "艸": "hierba", "虍": "tigre", "豕": "cerdo", "豸": "tejón",
+  "辵": "caminar", "釆": "distinguir", "隶": "capturar", "隹": "ave pequeña",
+  "韋": "cuero curtido", "韭": "cebollino", "頁": "página", "髟": "cabello largo",
+  "鬥": "luchar", "鬯": "vino ceremonial", "鬲": "caldero", "鹵": "sal",
+  "麥": "trigo", "黍": "mijo", "黑": "negro", "黹": "bordado",
+  "黽": "rana", "鼎": "trípode", "鼠": "ratón", "齊": "uniforme",
+  "齒": "diente", "龍": "dragón", "龜": "tortuga", "龠": "flauta",
+  "啇": "elemento fonético",
+};

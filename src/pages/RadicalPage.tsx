@@ -1,12 +1,14 @@
 import { useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getKanji, radicalFor } from "@/lib/data";
+import { getKanji, radicalFor, radicalMeaning, kanjiPrimaryMeaning, hasSpanishKanjiMeaning } from "@/lib/data";
 import { phoneticSeriesFor } from "@/lib/keisei";
 import { POSITION_DEFS } from "@/lib/types";
+import { useI18n } from "@/lib/i18n";
 
 const PAGE_SIZE = 60;
 
 export default function RadicalPage() {
+  const { language, t } = useI18n();
   const { char } = useParams();
   const data = char ? radicalFor(char) : undefined;
   const [jōyōOnly, setJōyōOnly] = useState(true);
@@ -29,11 +31,11 @@ export default function RadicalPage() {
       <section className="radical-hero">
         <div className="radical-hero-char" lang="ja">{data.variant || data.character}</div>
         <div className="radical-hero-side">
-          <h1 className="radical-name">{data.name || "component"}</h1>
-          {data.meaning ? <p className="radical-meaning">{data.meaning}</p> : null}
+          <h1 className="radical-name">{data.name || t("radical.component")}</h1>
+          {data.meaning ? <p className="radical-meaning">{radicalMeaning(data, language)}</p> : null}
           <div className="kanji-badges">
-            {data.number > 0 ? <span className="badge">Kangxi #{data.number}</span> : null}
-            <span className="badge">{data.strokeCount} strokes</span>
+            {data.number > 0 ? <span className="badge">{t("radical.kangxi", { number: data.number })}</span> : null}
+            <span className="badge">{t("radical.strokeCount", { count: data.strokeCount })}</span>
             {data.position ? (
               <span className="badge pos">
                 {POSITION_DEFS[data.position].ja} · {POSITION_DEFS[data.position].en}
@@ -48,21 +50,21 @@ export default function RadicalPage() {
 
       <section className="panel reverse-tree-panel">
         <h2 className="panel-title">
-          Reverse component tree
-          <span className="panel-sub">every kanji that contains {data.character}</span>
+          {t("radical.treeTitle")}
+          <span className="panel-sub">{t("radical.allKanji", { char: data.character })}</span>
         </h2>
         <div className="tree-controls">
           <button
             className={jōyōOnly ? "toggle on" : "toggle"}
             onClick={() => { setJōyōOnly((v) => !v); setLimit(PAGE_SIZE); }}
           >
-            {jōyōOnly ? "dataset kanji only" : "all kanji"}
+            {jōyōOnly ? t("radical.datasetOnly") : t("radical.all")}
           </button>
           <Link className="btn" to={`/graph?kind=radical&kanji=${encodeURIComponent(data.character)}`}>
-            Graph view
+            {t("radical.graphView")}
           </Link>
           <Link className="btn" to={`/practice?family=${encodeURIComponent(data.character)}`}>
-            Practice family
+            {t("radical.practiceFamily")}
           </Link>
         </div>
         <ul className="reverse-tree">
@@ -72,29 +74,35 @@ export default function RadicalPage() {
               <li key={k} className="tree-item">
                 <span className="tree-dash" aria-hidden>{"\u2514\u2500"}</span>
                 <Link className="tree-kanji" to={`/kanji/${k}`} lang="ja">{k}</Link>
-                {kd ? <span className="tree-sub">{kd.meanings[0]}{kd.jlpt ? ` · ${kd.jlpt}` : ""}</span> : null}
+                {kd ? <span className="tree-sub">
+                  <span lang={language === "es" && !hasSpanishKanjiMeaning(kd) ? "en" : language}>
+                    {kanjiPrimaryMeaning(kd, language)}
+                  </span>
+                  {language === "es" && !hasSpanishKanjiMeaning(kd) ? ` · ${t("content.englishLabel")}` : ""}
+                  {kd.jlpt ? ` · ${kd.jlpt}` : ""}
+                </span> : null}
               </li>
             );
           })}
         </ul>
         {limit < familyFiltered.length ? (
           <button className="link-btn" onClick={() => setLimit((l) => l + PAGE_SIZE)}>
-            Show {Math.min(PAGE_SIZE, familyFiltered.length - limit)} more of {familyFiltered.length}
+            {t("radical.showMore", { count: Math.min(PAGE_SIZE, familyFiltered.length - limit), total: familyFiltered.length })}
           </button>
         ) : (
-          <p className="tree-count">{familyFiltered.length} kanji</p>
+          <p className="tree-count">{t("radical.kanjiCount", { count: familyFiltered.length })}</p>
         )}
       </section>
 
       {series ? (
         <section className="panel reverse-tree-panel">
           <h2 className="panel-title">
-            Phonetic series
+            {t("radical.phoneticSeries")}
             <span className="panel-sub">
-              {series.key} is the sound-carrier in {series.members.length} kanji
+              {t("radical.soundCarrier", { key: series.key, count: series.members.length })}
               {series.scoredCount
-                ? ` — predicts onyomi in ${series.matchCount}/${series.scoredCount}`
-                : " — no on'yomi readings to score"}
+                ? t("radical.predicts", { matches: series.matchCount, scored: series.scoredCount })
+                : t("radical.noOn")}
             </span>
           </h2>
           <div className="tree-controls">
@@ -102,10 +110,10 @@ export default function RadicalPage() {
               className="btn"
               to={`/graph?kind=radical&kanji=${encodeURIComponent(series.key)}`}
             >
-              Graph view
+              {t("radical.graphView")}
             </Link>
             <Link className="btn" to={`/practice?series=${encodeURIComponent(series.key)}`}>
-              Practice series
+              {t("radical.practiceSeries")}
             </Link>
           </div>
           <ul className="reverse-tree">
@@ -127,9 +135,7 @@ export default function RadicalPage() {
               </li>
             ))}
           </ul>
-          <p className="tree-count">
-            Match rule: exact onyomi or voiced readings (dakuten/handakuten)
-          </p>
+          <p className="tree-count">{t("radical.matchRule")}</p>
         </section>
       ) : null}
     </article>
@@ -137,11 +143,12 @@ export default function RadicalPage() {
 }
 
 function NotFoundRadical({ char }: { char: string }) {
+  const { t } = useI18n();
   return (
     <div className="notfound page">
       <div className="notfound-char" lang="ja">{char || "？"}</div>
-      <p>{char ? "This radical is not in the dataset." : "No radical specified."}</p>
-      <Link className="btn" to="/browse">Browse radicals</Link>
+      <p>{char ? t("radical.missing") : t("radical.none")}</p>
+      <Link className="btn" to="/browse">{t("radical.browse")}</Link>
     </div>
   );
 }

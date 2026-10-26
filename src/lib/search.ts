@@ -1,10 +1,11 @@
 import type { JlptLevel, KanjiData } from "./types";
-import { allKanji, radicals, getKanji, radicalFor, variantToKey } from "./data";
+import { allKanji, radicals, getKanji, radicalFor, variantToKey, kanjiMeanings, kanjiPrimaryMeaning, radicalMeaning } from "./data";
 
 export interface SearchHit {
   kind: "kanji" | "radical";
   character: string;
   sub: string;
+  meaning?: string;
   key: string;
   score?: number;
 }
@@ -93,10 +94,14 @@ function weight(k: KanjiData): number {
   return lvl * 1_000_000 - Math.min(999_999, k.freq ?? 999_999);
 }
 
+function normalized(text: string): string {
+  return text.toLocaleLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+}
+
 function meaningWeight(meanings: string[], q: string): number {
   let best = 0;
   for (const m of meanings) {
-    const mm = m.toLowerCase();
+    const mm = normalized(m);
     let s = 0;
     if (mm === q) s = 100;
     else if (mm.startsWith(q + ",") || mm.startsWith(q + " ")) s = 75;
@@ -111,7 +116,7 @@ function push(items: SearchHit[], hit: SearchHit): void {
   items.push(hit);
 }
 
-export function search(input: string, limit = 40): {
+export function search(input: string, limit = 40, language: "en" | "es" = "en"): {
   hits: SearchHit[];
   jlpt: JlptLevel | null;
   strokes: number | null;
@@ -125,17 +130,17 @@ export function search(input: string, limit = 40): {
     const hits: SearchHit[] = allKanji()
       .filter((k) => k.jlpt === level)
       .sort((a, b) => weight(b) - weight(a))
-      .map((k) => ({ kind: "kanji", character: k.kanji, sub: level, key: k.kanji }));
+      .map((k) => ({ kind: "kanji", character: k.kanji, sub: level, meaning: kanjiPrimaryMeaning(k, language), key: k.kanji }));
     return { hits: hits.slice(0, limit), jlpt: level, strokes: null };
   }
 
-  const strokeMatch = raw.match(/(\d+)\s*strokes?/i);
+  const strokeMatch = raw.match(/(\d+)\s*(?:strokes?|trazos?)/i);
   if (strokeMatch) {
     const n = parseInt(strokeMatch[1], 10);
     const hits: SearchHit[] = allKanji()
       .filter((k) => k.strokeCount === n)
       .sort((a, b) => weight(b) - weight(a))
-      .map((k) => ({ kind: "kanji", character: k.kanji, sub: k.jlpt ?? "", key: k.kanji }));
+      .map((k) => ({ kind: "kanji", character: k.kanji, sub: k.jlpt ?? "", meaning: kanjiPrimaryMeaning(k, language), key: k.kanji }));
     return { hits: hits.slice(0, limit), jlpt: null, strokes: n };
   }
 
@@ -145,21 +150,21 @@ export function search(input: string, limit = 40): {
     const hits: SearchHit[] = [];
     const kanji = getKanji(raw) ?? getKanji(key);
     if (kanji) {
-      push(hits, { kind: "kanji", character: kanji.kanji, sub: kanji.jlpt ?? "", key: kanji.kanji });
+      push(hits, { kind: "kanji", character: kanji.kanji, sub: kanji.jlpt ?? "", meaning: kanjiPrimaryMeaning(kanji, language), key: kanji.kanji });
     }
     const radical = radicalFor(raw) ?? radicalFor(key);
     if (radical) {
-      push(hits, { kind: "radical", character: radical.character, sub: radical.name, key: radical.character });
+      push(hits, { kind: "radical", character: radical.character, sub: radical.name, meaning: radicalMeaning(radical, language), key: radical.character });
     }
     return { hits, jlpt: null, strokes: null };
   }
 
-  const q = raw.toLowerCase();
+  const q = normalized(raw);
   const { hira, kata } = romajiToKana(raw);
   const items: SearchHit[] = [];
 
   for (const k of allKanji()) {
-    let best = meaningWeight(k.meanings, q);
+    let best = meaningWeight(kanjiMeanings(k, language), q);
     for (const r of k.onyomi) {
       if (r === kata) best = Math.max(best, 95);
       else if (kata && r.startsWith(kata)) best = Math.max(best, 78);
@@ -169,13 +174,13 @@ export function search(input: string, limit = 40): {
       else if (hira && r.startsWith(hira)) best = Math.max(best, 70);
     }
     if (best > 0) {
-      push(items, { kind: "kanji", character: k.kanji, sub: k.jlpt ?? "", key: k.kanji });
+      push(items, { kind: "kanji", character: k.kanji, sub: k.jlpt ?? "", meaning: kanjiPrimaryMeaning(k, language), key: k.kanji, score: best });
     }
   }
 
   for (const r of radicals) {
     let best = 0;
-    const rm = r.meaning.toLowerCase();
+    const rm = normalized(radicalMeaning(r, language));
     if (rm === q) best = 96;
     else if (rm.includes(q)) best = Math.max(best, 45);
     for (const nm of r.names) {
@@ -184,7 +189,7 @@ export function search(input: string, limit = 40): {
       if (hira && (nm === hira || nm.startsWith(hira))) best = Math.max(best, 85);
     }
     if (best > 0) {
-      push(items, { kind: "radical", character: r.character, sub: r.name, key: r.character });
+      push(items, { kind: "radical", character: r.character, sub: r.name, meaning: radicalMeaning(r, language), key: r.character, score: best });
     }
   }
 

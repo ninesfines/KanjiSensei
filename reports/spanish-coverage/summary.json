@@ -1,0 +1,61 @@
+{
+  "source_pin": "3.6.2+20260921173324",
+  "source_date": "2026-09-21",
+  "current_app_kanji": {
+    "total": 2387,
+    "covered": 2315,
+    "by_jlpt": {
+      "N5": {
+        "total": 80,
+        "covered": 80,
+        "missing": 0
+      },
+      "N4": {
+        "total": 166,
+        "covered": 166,
+        "missing": 0
+      },
+      "N3": {
+        "total": 367,
+        "covered": 367,
+        "missing": 0
+      },
+      "N2": {
+        "total": 373,
+        "covered": 373,
+        "missing": 0
+      },
+      "N1": {
+        "total": 1244,
+        "covered": 1244,
+        "missing": 0
+      },
+      "Sin JLPT": {
+        "total": 157,
+        "covered": 85,
+        "missing": 72
+      }
+    }
+  },
+  "unique_word_reading_pairs": {
+    "total": 11245,
+    "covered": 8497,
+    "missing": 2748,
+    "no_english_id_match": 1,
+    "no_spanish_entry": 0,
+    "no_applicable_spanish_gloss": 2747,
+    "meaning_aligned_covered": 6886,
+    "spanish_present_but_not_aligned_to_displayed_english": 1611,
+    "pairs_with_unique_sense_alignment": 7367,
+    "pairs_with_unique_displayed_english_sense_in_entry": 8413,
+    "pairs_with_ambiguous_sense_alignment": 144,
+    "pairs_with_unmatched_spanish_senses": 986,
+    "ambiguous_source_pair": 0,
+    "resolved_by_english_gloss": 9,
+    "english_gloss_no_candidate_match": 0,
+    "multiple_spanish_ids": 0,
+    "covered_with_multiple_senses": 351
+  },
+  "sample_size": 54,
+  "review_instructions": "Manually judge sense equivalence and natural Spanish in quality-review-sample.csv; script does not infer semantic correctness."
+}

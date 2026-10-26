@@ -35,12 +35,13 @@ npm run build && npm run preview
 
 ## Data
 
-Generated offline into `src/data/{kanji,radicals}.json` by
+Generated offline into `src/data/` by
 `scripts/build_data.py` (stdlib only) from `data_raw/`:
 
 | File | Source | Licence |
 | --- | --- | --- |
 | `kanjidic2-en-3.6.2.json` | EDRDG KANJIDIC2 | CC BY-SA 4.0 |
+| `kanjidic2-all-3.6.2+20260921173324.json` | EDRDG KANJIDIC2, all languages; [pinned jmdict-simplified release](https://github.com/scriptin/jmdict-simplified/releases/tag/3.6.2%2B20260921173324) | CC BY-SA 4.0 |
 | `jmdict-eng-common-3.6.2.json` | EDRDG JMdictE (common) | CC BY-SA 4.0 |
 | `jmdict-examples-eng-3.6.2.json` | EDRDG + Tatoeba pairs | CC BY-SA 4.0 / CC BY 2.0 FR |
 | `krad.json` | RADKFILE/KRADFILE (recommended replacements) | EDRDG licence |
@@ -50,6 +51,14 @@ Generated offline into `src/data/{kanji,radicals}.json` by
 
 Attribution required by the licences above — this file serves as such. If you
 redistribute, keep the attribution table. EDRDG licence: https://edrdg.org/edrg/licence.html
+
+The multilingual snapshot supplies `es` meanings for `src/data/kanji-es.json`;
+the file stores only kanji with Spanish glosses, so the app can fall back to the
+English meanings for the rest. Download the `kanjidic2-all-3.6.2+20260921173324`
+JSON asset from the pinned release above and save it at
+`data_raw/kanjidic2-all-3.6.2+20260921173324.json`. `data_raw/` is ignored by
+Git. To rebuild only the Spanish map without rewriting the other generated
+files, run `python3 scripts/build_data.py --spanish-only`.
 
 ## Architecture
 

@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getKanji, radicalFor } from "@/lib/data";
+import { getKanji, radicalFor, kanjiMeanings, componentMeaning, hasSpanishKanjiMeaning } from "@/lib/data";
 import { getStrokes, roleMapFor, strokeGroups } from "@/lib/strokes";
 import { phoneticSeriesFor } from "@/lib/keisei";
 import { POSITION_DEFS, type ComponentRef } from "@/lib/types";
 import type { ComponentRole, StrokesData } from "@/lib/types";
 import StrokeSvg from "@/components/StrokeSvg";
+import { useI18n } from "@/lib/i18n";
+import { kanaToRomaji } from "@/lib/romaji";
 
 type KanjiRecord = NonNullable<ReturnType<typeof getKanji>>;
 
@@ -91,6 +93,8 @@ function KanjiHero({
   onGroupChange: (key: string | null) => void;
   onHoverKey: (key: string | null) => void;
 }) {
+  const { language, t } = useI18n();
+  const meanings = kanjiMeanings(data, language);
   return (
     <>
       <section className="kanji-hero">
@@ -110,31 +114,34 @@ function KanjiHero({
           )}
         </div>
         <div className="kanji-hero-side">
-        <h1 className="kanji-meaning">{data.meanings[0] ?? "—"}</h1>
+        <h1 className="kanji-meaning" lang={language === "es" && !hasSpanishKanjiMeaning(data) ? "en" : language}>{meanings[0] ?? "—"}</h1>
+        {language === "es" && !hasSpanishKanjiMeaning(data) ? (
+          <p className="muted">{t("kanji.englishFallback")}</p>
+        ) : null}
         <div className="kanji-badges">
           {data.jlpt ? <span className="badge jlpt">{data.jlpt}</span> : null}
-          {data.grade ? <span className="badge">grade {data.grade}</span> : null}
+          {data.grade ? <span className="badge">{t("kanji.grade", { grade: data.grade })}</span> : null}
           {data.freq ? <span className="badge"># {data.freq}</span> : null}
-          <span className="badge">{data.strokeCount} strokes</span>
+          <span className="badge">{t("kanji.strokeCount", { count: data.strokeCount })}</span>
         </div>
         <div className="reading-group">
-          <span className="reading-label">On’yomi</span>
+          <span className="reading-label">{t("kanji.on")}</span>
           <div className="reading-chips">
             {data.onyomi.length ? (
-              data.onyomi.map((r) => <span key={r} className="chip on">{r}</span>)
+              data.onyomi.map((r) => <span key={r} className="chip on"><span lang="ja">{r}</span><span className="reading-romaji">{kanaToRomaji(r)}</span></span>)
             ) : <span className="muted">—</span>}
           </div>
         </div>
         <div className="reading-group">
-          <span className="reading-label">Kun’yomi</span>
+          <span className="reading-label">{t("kanji.kun")}</span>
           <div className="reading-chips">
             {data.kunyomi.length ? (
-              data.kunyomi.map((r) => <span key={r} className="chip kun">{r}</span>)
+              data.kunyomi.map((r) => <span key={r} className="chip kun"><span lang="ja">{r}</span><span className="reading-romaji">{kanaToRomaji(r)}</span></span>)
             ) : <span className="muted">—</span>}
           </div>
         </div>
-        {data.meanings.length > 1 ? (
-          <p className="extra-meanings">{data.meanings.slice(1).join(", ")}</p>
+        {meanings.length > 1 ? (
+          <p className="extra-meanings">{meanings.slice(1).join(", ")}</p>
         ) : null}
         </div>
       </section>
@@ -165,10 +172,11 @@ function BuildUpSteps({
   activeGroup: string | null;
   onHoverKey: (key: string | null) => void;
 }) {
+  const { language, t } = useI18n();
   const groups = strokeGroups(strokes.strokes);
   const activeIdx = activeGroup ? groups.findIndex((g) => g.key === activeGroup) : -1;
   return (
-    <div className="buildup-steps" aria-label="Component assembly steps" aria-live="polite">
+    <div className="buildup-steps" aria-label={t("kanji.assembly")} aria-live="polite">
       {groups.map((g, i) => {
         const c = data.components.find((k) => k.canonical === g.key);
         const pos = c?.position ? POSITION_DEFS[c.position] : null;
@@ -179,7 +187,7 @@ function BuildUpSteps({
           <span
             key={`${g.key}-${g.startNn}`}
             className={`step${state}`}
-            title={`${c?.character ?? g.key}${c?.name ? ` · ${c.name}` : ""}${c?.meaning ? ` — ${c.meaning}` : ""}${pos ? ` · ${pos.ja} (${pos.en})` : ""} · strokes ${g.startNn}–${g.endNn}`}
+            title={`${c?.character ?? g.key}${c?.name ? ` · ${c.name}` : ""}${c?.meaning ? ` — ${componentMeaning(c, language)}` : ""}${pos ? ` · ${pos.ja} (${pos.en})` : ""} · ${t("kanji.strokeRange", { start: g.startNn, end: g.endNn })}`}
             onMouseEnter={() => onHoverKey(g.key)}
             onMouseLeave={() => onHoverKey(null)}
           >
@@ -189,7 +197,7 @@ function BuildUpSteps({
             </span>
             {c?.name ? <span className="step-name">{c.name}</span> : null}
             {i === activeIdx ? (
-              <span className="step-range">strokes {g.startNn}–{g.endNn}</span>
+              <span className="step-range">{t("kanji.strokeRange", { start: g.startNn, end: g.endNn })}</span>
             ) : null}
           </span>
         );
@@ -207,6 +215,7 @@ function ComponentBreakdown({
   highlightKey: string | null;
   onHoverKey: (key: string | null) => void;
 }) {
+  const { t } = useI18n();
   // discovery hook for the phonetic series: only for components that exist as
   // radicals.json entries (13 keisei canonicals have no radical page).
   const phon = data.components.find((c) => c.role === "phonetic");
@@ -214,7 +223,7 @@ function ComponentBreakdown({
   const hint = phon && series && radicalFor(phon.canonical);
   return (
     <section className="panel">
-      <h2 className="panel-title">Component breakdown</h2>
+      <h2 className="panel-title">{t("kanji.breakdown")}</h2>
       <div className="comp-chips">
         {data.components.map((c) => (
           <ComponentChip
@@ -227,14 +236,15 @@ function ComponentBreakdown({
       </div>
       {hint ? (
         <p className="phonetic-hint">
-          Reading hint: <span lang="ja">{phon!.character}</span> is the phonetic
-          here —{" "}
+          {t("kanji.readingHint")} <span lang="ja">{phon!.character}</span> {t("kanji.phoneticIs")}{" "}
           <Link to={`/radical/${phon!.canonical}`}>
-            the {phon!.character} series ({series!.members.length} kanji
-            {series!.scoredCount
-              ? `, ${series!.matchCount}/${series!.scoredCount} predictable`
-              : ""}
-            )
+            {t("kanji.seriesLink", {
+              char: phon!.character,
+              count: series!.members.length,
+              predictable: series!.scoredCount
+                ? t("kanji.predictable", { matches: series!.matchCount, scored: series!.scoredCount })
+                : "",
+            })}
           </Link>
         </p>
       ) : null}
@@ -251,11 +261,12 @@ function ComponentChip({
   lit?: boolean;
   onHoverKey?: (key: string | null) => void;
 }) {
+  const { language, t } = useI18n();
   return (
     <Link
       to={`/radical/${c.canonical}`}
       className={`comp-chip role-${c.role}${lit ? " lit" : ""}`}
-      title={`${c.name || c.canonical} — ${c.meaning}${c.position ? ` · ${POSITION_DEFS[c.position].ja}` : ""}`}
+      title={`${c.name || c.canonical} — ${componentMeaning(c, language)}${c.position ? ` · ${POSITION_DEFS[c.position].ja}` : ""}`}
       onMouseEnter={() => onHoverKey?.(c.canonical)}
       onMouseLeave={() => onHoverKey?.(null)}
       onFocus={() => onHoverKey?.(c.canonical)}
@@ -263,24 +274,26 @@ function ComponentChip({
     >
       <span className="comp-char" lang="ja">{c.character}</span>
       <span className="comp-name">{c.name || c.canonical}</span>
-      <span className="comp-mean">{c.meaning || "—"}</span>
+      <span className="comp-mean">{componentMeaning(c, language) || "—"}</span>
       <span className="comp-pos">
-        {c.position ? `${POSITION_DEFS[c.position].ja} (${POSITION_DEFS[c.position].en})` : "component"}
+        {c.position ? `${POSITION_DEFS[c.position].ja} (${POSITION_DEFS[c.position].en})` : t("radical.component")}
       </span>
     </Link>
   );
 }
 
 function WordsPanel({ data }: { data: KanjiRecord }) {
+  const { language, t } = useI18n();
   return (
     <section className="panel">
-      <h2 className="panel-title">Common words & examples</h2>
+      <h2 className="panel-title">{t("kanji.words")}</h2>
+      {language === "es" ? <p className="muted" lang="es">{t("kanji.englishNotice")}</p> : null}
       <ul className="word-list">
         {data.words.map((w) => (
           <li key={`${w.kanji}|${w.kana}`} className="word-item">
             <span className="word-kanji" lang="ja">{w.kanji}</span>
             <span className="word-kana">{w.kana}</span>
-            <span className="word-meaning">{w.meaning}</span>
+            <span className="word-meaning" lang="en">{w.meaning}</span>
           </li>
         ))}
       </ul>
@@ -288,7 +301,7 @@ function WordsPanel({ data }: { data: KanjiRecord }) {
         {data.sentences.map((s, i) => (
           <li key={`sent-${i}`} className="sent-item">
             <span className="sent-jp" lang="ja">{s.jp}</span>
-            <span className="sent-en">{s.en}</span>
+            <span className="sent-en" lang="en">{s.en}</span>
           </li>
         ))}
       </ul>
@@ -297,16 +310,17 @@ function WordsPanel({ data }: { data: KanjiRecord }) {
 }
 
 function RelatedPanel({ data }: { data: KanjiRecord }) {
+  const { t } = useI18n();
   return (
     <section className="panel">
-      <h2 className="panel-title">Explore related</h2>
+      <h2 className="panel-title">{t("kanji.related")}</h2>
       <div className="btn-row">
         <Link className="btn" to={`/graph?kind=kanji&kanji=${encodeURIComponent(data.kanji)}`}>
-          Relationship graph
+          {t("kanji.graph")}
         </Link>
         {data.radical?.character ? (
           <Link className="btn" to={`/radical/${data.radical.character}`}>
-            Radical family: {data.radical.character}（{data.radical.name}）
+            {t("kanji.radicalPage")}: {data.radical.character}（{data.radical.name}）
           </Link>
         ) : null}
       </div>
@@ -315,11 +329,12 @@ function RelatedPanel({ data }: { data: KanjiRecord }) {
 }
 
 function NotFoundKanji({ char }: { char: string }) {
+  const { t } = useI18n();
   return (
     <div className="notfound page">
       <div className="notfound-char" lang="ja">{char || "？"}</div>
-      <p>{char ? "This kanji is not in the dataset." : "No kanji specified."}</p>
-      <Link className="btn" to="/">Back home</Link>
+      <p>{char ? t("kanji.missing") : t("kanji.none")}</p>
+      <Link className="btn" to="/">{t("common.backHome")}</Link>
     </div>
   );
 }

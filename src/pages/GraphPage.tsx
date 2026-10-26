@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import cytoscape from "cytoscape";
 import { buildGraph, graphToCytoscapeElements } from "@/lib/graph";
+import { useI18n } from "@/lib/i18n";
 
 const COLORS: Record<string, { bg: string; border: string; size: number }> = {
   radical: { bg: "#f43f5e", border: "#fda4af", size: 30 },
@@ -15,6 +16,7 @@ const EDGE_COLOR: Record<string, string> = {
 };
 
 export default function GraphPage() {
+  const { language, t } = useI18n();
   const [params] = useSearchParams();
   const kind = (params.get("kind") === "radical" ? "radical" : "kanji") as "kanji" | "radical";
   const char = params.get("kanji") ?? params.get("char") ?? "家";
@@ -37,7 +39,7 @@ export default function GraphPage() {
   );
 
   useEffect(() => {
-    const graph = buildGraph({ kind, character: char }, { limitPerRadical: 16 });
+    const graph = buildGraph({ kind, character: char }, { limitPerRadical: 16, language });
     if (!containerRef.current) return;
     const cy = cytoscape({
       container: containerRef.current,
@@ -140,14 +142,14 @@ export default function GraphPage() {
       setTip(null);
       void cy.destroy();
     };
-  }, [kind, char, navigate, reduceMotion]);
+  }, [kind, char, navigate, reduceMotion, language]);
 
   return (
     <article className="graph-page page">
       <header className="page-head">
-        <h1>Relationship graph</h1>
+        <h1>{t("graph.title")}</h1>
         <p className="muted">
-          {kind === "kanji" ? `centered on ${char}` : `centered on ${char}`} — zoom with scroll, pan by dragging, click a node to open it.
+          {t("graph.help", { char })}
         </p>
       </header>
       <div className="graph-wrap">
@@ -159,16 +161,16 @@ export default function GraphPage() {
             aria-hidden="true"
           >
             <span className="tip-char" lang="ja">{tip.id}</span>
-            <span className={`tip-kind kind-${tip.kind}`}>{tip.kind}</span>
+            <span className={`tip-kind kind-${tip.kind}`}>{t(`graph.${tip.kind}` as "graph.radical" | "graph.component" | "graph.kanji")}</span>
             {tip.name ? <span className="tip-name">{tip.name}</span> : null}
             {tip.meaning ? <span className="tip-meaning">{tip.meaning}</span> : null}
           </div>
         )}
       </div>
       <div className="legend">
-        <span className="legend-item"><i className="dot radical" />radical</span>
-        <span className="legend-item"><i className="dot component" />component</span>
-        <span className="legend-item"><i className="dot kanji" />kanji</span>
+        <span className="legend-item"><i className="dot radical" />{t("graph.radical")}</span>
+        <span className="legend-item"><i className="dot component" />{t("graph.component")}</span>
+        <span className="legend-item"><i className="dot kanji" />{t("graph.kanji")}</span>
       </div>
     </article>
   );

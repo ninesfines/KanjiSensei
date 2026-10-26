@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import type { ComponentRole, StrokesData } from "@/lib/types";
 import { ROOT_GROUP_KEY, strokeCanonical, strokeGroups } from "@/lib/strokes";
+import { useI18n } from "@/lib/i18n";
 
 interface Props {
   data: StrokesData;
@@ -42,6 +43,7 @@ export default function StrokeSvg({
   onBuildUpChange,
   onGroupChange,
 }: Props) {
+  const { t } = useI18n();
   const [speed, setSpeed] = useState(1);
   const [runId, setRunId] = useState(0);
   const [lens, setLens] = useState<number[] | null>(null);
@@ -150,7 +152,7 @@ export default function StrokeSvg({
         className={`stroke-svg${done ? " done" : ""}`}
         viewBox="0 0 109 109"
         role="img"
-        aria-label={`Stroke order for ${data.kanji}`}
+        aria-label={t("stroke.order", { char: data.kanji })}
       >
         {data.strokes.map((s, i) => {
           const key = strokeCanonical(s.element || ROOT_GROUP_KEY);
@@ -181,26 +183,26 @@ export default function StrokeSvg({
       {!reduceMotion && (
         <div className="stroke-ctl">
           {onBuildUpChange && (
-            <span className="stroke-mode" role="group" aria-label="Animation mode">
+            <span className="stroke-mode" role="group" aria-label={t("stroke.animationMode")}>
               <button
                 className={`stroke-btn${!buildUp ? " on" : ""}`}
                 aria-pressed={!buildUp}
                 onClick={() => onBuildUpChange(false)}
               >
-                strokes
+                {t("stroke.strokes")}
               </button>
               <button
                 className={`stroke-btn${buildUp ? " on" : ""}`}
                 aria-pressed={buildUp}
                 onClick={() => onBuildUpChange(true)}
               >
-                components
+                {t("stroke.components")}
               </button>
             </span>
           )}
           <span className="ctl-sep" aria-hidden />
           <button className="stroke-btn" onClick={() => setRunId((v) => v + 1)}>
-            ↻ replay
+            {t("stroke.replay")}
           </button>
           <span className="ctl-sep" aria-hidden />
           {SPEEDS.map((sp) => (

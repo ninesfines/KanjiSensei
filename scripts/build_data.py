@@ -3,10 +3,12 @@
 
 Reads open dictionaries from data_raw/ and emits:
   src/data/kanji.json    - full kanji records for the app set
+  src/data/kanji-es.json - Spanish KANJIDIC2 meanings for the app set
   src/data/radicals.json - radical/component registry
 
 Sources (open data; see README for attribution):
   kanjidic2-en-3.6.2.json        EDRDG KANJIDIC2 (CC BY-SA 4.0)
+  kanjidic2-all-3.6.2+20260921173324.json EDRDG KANJIDIC2 multilingual snapshot
   jmdict-eng-common-3.6.2.json   JMdictE common-only words (CC BY-SA 4.0)
   jmdict-examples-eng-3.6.2.json Tatoeba-backed example pairs (CC BY 2.0 FR)
   krad.json                      KRADFILE (EDRDG): kanji -> components
@@ -18,6 +20,7 @@ Stdlib only. Run: python3 scripts/build_data.py
 """
 from __future__ import annotations
 
+import argparse
 import gzip
 import json
 import re
@@ -30,6 +33,8 @@ ROOT = Path(__file__).resolve().parent.parent
 RAW = ROOT / "data_raw"
 OUT = ROOT / "src" / "data"
 JMDICT_V = "3.6.2"
+KANJIDIC_ALL_FILE = "kanjidic2-all-3.6.2+20260921173324.json"
+KANJIDIC_ALL_VERSION = "3.6.2+20260921173324"
 
 _COMBOKANA = {
     "きゃ": "kya", "きゅ": "kyu", "きょ": "kyo",
@@ -149,6 +154,64 @@ def normalize_pos(p: str) -> str | None:
     return KANJIVG_POS.get(p.lower().strip())
 
 
+def build_spanish_meanings(app_set: set[str], generated: str) -> int:
+    """Emit a separate kanji -> Spanish glosses map from pinned KANJIDIC2 all."""
+    source = RAW / KANJIDIC_ALL_FILE
+    if not source.exists():
+        raise FileNotFoundError(
+            f"Missing {source}. Download the pinned all-language KANJIDIC2 JSON; "
+            "see README.md's Data section."
+        )
+    raw = json.loads(source.read_text(encoding="utf-8"))
+    if (
+        raw.get("version") != "3.6.2"
+        or raw.get("dictDate") != "2026-09-21"
+        or raw.get("databaseVersion") != "2026-264"
+        or raw.get("languages") != ["all"]
+    ):
+        raise ValueError(
+            f"Unexpected KANJIDIC2 snapshot in {source.name}: "
+            f"version={raw.get('version')!r}, dictDate={raw.get('dictDate')!r}, "
+            f"databaseVersion={raw.get('databaseVersion')!r}, "
+            f"languages={raw.get('languages')!r}; "
+            f"expected {KANJIDIC_ALL_VERSION}."
+        )
+
+    meanings_by_kanji: dict[str, list[str]] = {}
+    for character in raw.get("characters", []):
+        literal = character.get("literal")
+        if literal not in app_set:
+            continue
+        glosses: list[str] = []
+        seen: set[str] = set()
+        for group in (character.get("readingMeaning") or {}).get("groups", []):
+            for meaning in group.get("meanings", []):
+                if not isinstance(meaning, dict) or meaning.get("lang") != "es":
+                    continue
+                value = meaning.get("value", "").strip()
+                if value and value not in seen:
+                    seen.add(value)
+                    glosses.append(value)
+        if glosses:
+            meanings_by_kanji[literal] = glosses
+
+    target = OUT / "kanji-es.json"
+    target.write_text(
+        json.dumps({
+            "version": 1,
+            "sourceVersion": KANJIDIC_ALL_VERSION,
+            "generatedAt": generated,
+            "kanji": meanings_by_kanji,
+        }, ensure_ascii=False, separators=(",", ":")),
+        encoding="utf-8",
+    )
+    print(
+        f"  kanji-es.json: {len(meanings_by_kanji)}/{len(app_set)} kanji "
+        f"({target.stat().st_size / 1024:.0f} KB)"
+    )
+    return len(meanings_by_kanji)
+
+
 def radical_signature(entry: dict) -> tuple[str, list[str]]:
     roms = kana_names_to_romaji("、".join(entry["names_ja"]))
     primary = roms[0] if roms else entry["character"]
@@ -238,10 +301,22 @@ class KanjiVgParser:
 
 
 def main() -> None:  # PART2-MARKER
+    parser = argparse.ArgumentParser(description="Build KanjiSensei's offline data files.")
+    parser.add_argument(
+        "--spanish-only", action="store_true",
+        help="rebuild kanji-es.json only, using the existing kanji.json app set",
+    )
+    args = parser.parse_args()
     t0 = time.time()
     print("building kanjisensei data ...")
     generated = time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())
     OUT.mkdir(parents=True, exist_ok=True)
+
+    if args.spanish_only:
+        existing = json.loads((OUT / "kanji.json").read_text(encoding="utf-8"))
+        app_set = {row["kanji"] for row in existing["kanji"]}
+        build_spanish_meanings(app_set, generated)
+        return
 
     print("  kanjium radicals ...")
     kanjium: list[dict] = []
@@ -333,6 +408,7 @@ def main() -> None:  # PART2-MARKER
             app_list.append(lit)
             app_set.add(lit)
     print(f"  app set: {len(app_set)} kanji")
+    build_spanish_meanings(app_set, generated)
 
     def canonical_of_comp(c: str) -> str:
         return variant_to_canonical.get(c, c)
