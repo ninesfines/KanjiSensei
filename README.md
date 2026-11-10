@@ -20,6 +20,11 @@ npm run build && npm run preview
 
 - **Kanji explorer** — big kanji, meanings, JLPT, grade, frequency, stroke count,
   on/kun readings, common words, Tatoeba example sentences.
+- **Word explorer** — searchable word entries derived from the existing kanji
+  vocabulary, with readings, romaji, Spanish meanings where available (English
+  in parentheses), constituent kanji,
+  related words and a connection graph. It covers the curated words already
+  present in the kanji data, rather than the full JMdict vocabulary.
 - **Component breakdown** — every kanji decomposed into its components with
   Japanese radical names (ninben, ukanmuri…), meanings, positional type
   (hen/tsukuri/kanmuri/ashi/tare/nyou/kamae) and color-coded role
@@ -27,9 +32,9 @@ npm run build && npm run preview
 - **Reverse component tree** — every radical page lists every kanji that
   contains it, click-through in ├─ style, with a dataset-only filter.
 - **Relationship graph** — Obsidian-style force graph (Cytoscape): zoom, pan,
-  click nodes to navigate; kanji/radical/component color coded.
-- **Search** — kanji, meaning, on/kun (kana or romaji), radical names,
-  component characters, `JLPT N5`, `13 strokes`.
+  click nodes to navigate; kanji/radical/component/word color coded.
+- **Search** — kanji, words (spelling, reading, romaji or English meaning),
+  on/kun (kana or romaji), radical names, component characters, `JLPT N5`, `13 strokes`.
 - **Browse by radical** — all 214 Kangxi radicals plus non-Kangxi components,
   grouped by stroke count, with family sizes.
 
@@ -59,6 +64,11 @@ JSON asset from the pinned release above and save it at
 `data_raw/kanjidic2-all-3.6.2+20260921173324.json`. `data_raw/` is ignored by
 Git. To rebuild only the Spanish map without rewriting the other generated
 files, run `python3 scripts/build_data.py --spanish-only`.
+
+`src/data/words-es.json` is generated from the pinned JMdict Spanish coverage
+report with `python3 scripts/build_word_spanish.py`. It uses an aligned Spanish
+gloss when available, otherwise the first applicable Spanish gloss. The UI
+retains the English gloss in parentheses, especially useful for ambiguous senses.
 
 ## Architecture
 

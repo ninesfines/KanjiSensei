@@ -5,6 +5,8 @@ import Home from "./pages/Home";
 import KanjiPage from "./pages/KanjiPage";
 import RadicalPage from "./pages/RadicalPage";
 import BrowsePage from "./pages/BrowsePage";
+import WordsPage from "./pages/WordsPage";
+import WordPage from "./pages/WordPage";
 import NotFound from "./pages/NotFound";
 
 const GraphPage = lazy(() => import("./pages/GraphPage"));
@@ -18,6 +20,8 @@ export default function App() {
         <Route path="/kanji/:char" element={<KanjiPage />} />
         <Route path="/radical/:char" element={<RadicalPage />} />
         <Route path="/browse" element={<BrowsePage />} />
+        <Route path="/words" element={<WordsPage />} />
+        <Route path="/word" element={<WordPage />} />
         <Route
           path="/graph"
           element={

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { getKanji, radicalFor, kanjiMeanings, componentMeaning, hasSpanishKanjiMeaning } from "@/lib/data";
+import { getKanji, radicalFor, kanjiMeanings, componentMeaning, hasSpanishKanjiMeaning, wordDisplayMeaning, wordUrl } from "@/lib/data";
 import { getStrokes, roleMapFor, strokeGroups } from "@/lib/strokes";
 import { phoneticSeriesFor } from "@/lib/keisei";
 import { POSITION_DEFS, type ComponentRef } from "@/lib/types";
@@ -291,9 +291,9 @@ function WordsPanel({ data }: { data: KanjiRecord }) {
       <ul className="word-list">
         {data.words.map((w) => (
           <li key={`${w.kanji}|${w.kana}`} className="word-item">
-            <span className="word-kanji" lang="ja">{w.kanji}</span>
+            <Link className="word-kanji" lang="ja" to={wordUrl(w.kanji, w.kana)}>{w.kanji}</Link>
             <span className="word-kana">{w.kana}</span>
-            <span className="word-meaning" lang="en">{w.meaning}</span>
+            <span className="word-meaning">{wordDisplayMeaning(w, language)}</span>
           </li>
         ))}
       </ul>

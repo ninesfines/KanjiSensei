@@ -1,12 +1,14 @@
 import type { JlptLevel, KanjiData } from "./types";
-import { allKanji, radicals, getKanji, radicalFor, variantToKey, kanjiMeanings, kanjiPrimaryMeaning, radicalMeaning } from "./data";
+import { allKanji, allWords, wordsForKanji, radicals, getKanji, radicalFor, variantToKey, kanjiMeanings, kanjiPrimaryMeaning, radicalMeaning, wordKey, wordSpanishMeaning, wordDisplayMeaning } from "./data";
+import { kanaToRomaji } from "./romaji";
 
 export interface SearchHit {
-  kind: "kanji" | "radical";
+  kind: "kanji" | "radical" | "word";
   character: string;
   sub: string;
   meaning?: string;
   key: string;
+  reading?: string;
   score?: number;
 }
 
@@ -88,6 +90,7 @@ export function romajiToKana(input: string): { hira: string; kata: string } {
 }
 
 const JLPT_W: Record<JlptLevel, number> = { N5: 5, N4: 4, N3: 3, N2: 2, N1: 1 };
+const WORD_SEARCH = allWords().map((word) => ({ word, romaji: kanaToRomaji(word.kana) }));
 
 function weight(k: KanjiData): number {
   const lvl = k.jlpt ? JLPT_W[k.jlpt] : 0;
@@ -156,7 +159,10 @@ export function search(input: string, limit = 40, language: "en" | "es" = "en"):
     if (radical) {
       push(hits, { kind: "radical", character: radical.character, sub: radical.name, meaning: radicalMeaning(radical, language), key: radical.character });
     }
-    return { hits, jlpt: null, strokes: null };
+    if (kanji) for (const w of wordsForKanji(kanji.kanji).slice(0, Math.max(0, limit - hits.length))) {
+      push(hits, { kind: "word", character: w.kanji, reading: w.kana, sub: w.kana, meaning: wordDisplayMeaning(w, language), key: wordKey(w.kanji, w.kana) });
+    }
+    return { hits: hits.slice(0, limit), jlpt: null, strokes: null };
   }
 
   const q = normalized(raw);
@@ -191,6 +197,24 @@ export function search(input: string, limit = 40, language: "en" | "es" = "en"):
     if (best > 0) {
       push(items, { kind: "radical", character: r.character, sub: r.name, meaning: radicalMeaning(r, language), key: r.character, score: best });
     }
+  }
+
+  for (const { word: w, romaji: wordRomaji } of WORD_SEARCH) {
+    let best = 0;
+    if (w.kanji === raw) best = 110;
+    else if (w.kanji.startsWith(raw)) best = 82;
+    else if (w.kanji.includes(raw)) best = 48;
+    if (w.kana === raw || (hira && w.kana === hira) || (kata && w.kana === kata)) best = Math.max(best, 95);
+    else if (w.kana.startsWith(raw) || (hira && w.kana.startsWith(hira))) best = Math.max(best, 72);
+    const romaji = normalized(wordRomaji);
+    if (romaji === q) best = Math.max(best, 94);
+    else if (romaji.startsWith(q)) best = Math.max(best, 68);
+    best = Math.max(best, meaningWeight([w.meaning], q) - 10);
+    if (language === "es") {
+      const spanish = wordSpanishMeaning(w.kanji, w.kana);
+      if (spanish) best = Math.max(best, meaningWeight([spanish], q));
+    }
+    if (best > 0) push(items, { kind: "word", character: w.kanji, reading: w.kana, sub: w.kana, meaning: wordDisplayMeaning(w, language), key: wordKey(w.kanji, w.kana), score: best });
   }
 
   items.sort((a, b) => {

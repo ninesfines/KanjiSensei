@@ -93,6 +93,8 @@ a { color: var(--accent); text-decoration: none; }
 }
 .result.active { background: color-mix(in srgb, var(--accent) 16%, transparent); }
 .result-char { font-size: 20px; width: 26px; text-align: center; }
+.result-char.kind-word { width: auto; min-width: 42px; max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: #86efac; }
+.result:has(.kind-word) .result-kind { width: auto; min-width: 52px; text-transform: none; }
 .kind-radical { color: var(--red); }
 .result-kind { color: var(--text-faint); font-size: 11px; text-transform: uppercase; width: 52px; }
 .result-meaning { color: var(--text-dim); flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -203,6 +205,7 @@ a { color: var(--accent); text-decoration: none; }
 .word-list { list-style: none; margin: 0 0 16px; padding: 0; display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 8px; }
 .word-item { display: flex; align-items: baseline; gap: 10px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 8px 12px; }
 .word-kanji { font-size: 18px; }
+a.word-kanji:hover { text-decoration: underline; }
 .word-kana { color: var(--text-faint); font-size: 13px; }
 .word-meaning { color: var(--text-dim); font-size: 13px; margin-left: auto; text-align: right; }
 .sent-list { list-style: none; margin: 0; padding: 0; display: grid; gap: 10px; }
@@ -284,6 +287,22 @@ a { color: var(--accent); text-decoration: none; }
 .dot.radical { background: var(--red); }
 .dot.component { background: var(--blue); }
 .dot.kanji { background: #7db2f9; }
+.dot.word { background: #86efac; }
+
+/* words */
+.words-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 10px; margin: 16px 0 20px; }
+.word-card, .word-related-list a { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px; color: var(--text); }
+.word-card:hover, .word-related-list a:hover, .word-kanji-link:hover { border-color: #86efac; }
+.word-card-form { font-size: 25px; }
+.word-card-reading, .word-related-list small { color: var(--text-faint); font-size: 13px; }
+.word-card-meaning, .word-related-list a > span:last-child { color: var(--text-dim); font-size: 13px; }
+.word-hero { padding: 24px 0 30px; }
+.word-hero h1 { font-size: clamp(48px, 10vw, 84px); line-height: 1.1; margin: 0; }
+.word-reading { display: flex; flex-wrap: wrap; gap: 18px; color: var(--text-dim); margin: 12px 0; }
+.word-hero-meaning { font-size: 20px; margin: 14px 0; }
+.word-kanji-links, .word-related-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; }
+.word-kanji-link { display: flex; align-items: center; gap: 12px; padding: 12px; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; color: var(--text-dim); }
+.word-kanji-link span:first-child { font-size: 30px; color: var(--text); }
 
 /* graph hover tooltip + hover state */
 .graph-wrap { position: relative; }

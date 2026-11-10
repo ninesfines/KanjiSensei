@@ -1,9 +1,11 @@
 import type { KanjiData, RadicalData } from "./types";
-import { kanjiList, radicalFor, variantToKey, getKanji, kanjiPrimaryMeaning, radicalMeaning, componentMeaning } from "./data";
+import { kanjiList, radicalFor, variantToKey, getKanji, getWord, wordsForKanji, wordKey, kanjiPrimaryMeaning, radicalMeaning, componentMeaning, wordDisplayMeaning } from "./data";
 
 export interface GraphNode {
   id: string;
-  kind: "kanji" | "radical" | "component";
+  kind: "kanji" | "radical" | "component" | "word";
+  label?: string;
+  reading?: string;
   /** romaji name (radicals/components), for the hover tooltip. */
   name?: string;
   /** primary meaning of this node's character, when known. */
@@ -13,7 +15,7 @@ export interface GraphNode {
 export interface GraphEdge {
   from: string;
   to: string;
-  kind: "contains" | "uses";
+  kind: "contains" | "uses" | "forms";
 }
 
 /**
@@ -21,7 +23,7 @@ export interface GraphEdge {
  * component universe of a single kanji.
  */
 export function buildGraph(
-  root: { kind: "kanji" | "radical"; character: string },
+  root: { kind: "kanji" | "radical" | "word"; character: string; reading?: string },
   opts: { limitPerRadical?: number; language?: "en" | "es" } = {}
 ): { nodes: GraphNode[]; edges: GraphEdge[] } {
   const limit = opts.limitPerRadical ?? 24;
@@ -40,6 +42,36 @@ export function buildGraph(
     seenEdge.add(key);
     edges.push({ from, to, kind });
   };
+
+  const addWord = (form: string, reading: string) => {
+    const word = getWord(form, reading);
+    if (!word) return;
+    const id = `word:${encodeURIComponent(form)}:${encodeURIComponent(reading)}`;
+    addNode(id, "word", { label: form, reading, meaning: wordDisplayMeaning(word, language) });
+    for (const char of word.characters) {
+      addNode(char, "kanji", { meaning: kanjiPrimaryMeaning(getKanji(char), language) });
+      addEdge(char, id, "forms");
+    }
+  };
+
+  if (root.kind === "word") {
+    const word = getWord(root.character, root.reading ?? "");
+    if (!word) return { nodes: [], edges: [] };
+    addWord(word.kanji, word.kana);
+    const related = new Set<string>();
+    for (const char of word.characters) {
+      for (const other of wordsForKanji(char)) {
+        if (related.size >= 18) break;
+        const key = wordKey(other.kanji, other.kana);
+        if (key !== wordKey(word.kanji, word.kana)) related.add(key);
+      }
+    }
+    for (const key of related) {
+      const [form, reading] = key.split("\u0000");
+      addWord(form, reading);
+    }
+    return { nodes: [...nodes.values()], edges };
+  }
 
   if (root.kind === "kanji") {
     const kanji = kanjiList.find((k) => k.kanji === root.character);
@@ -64,6 +96,7 @@ export function buildGraph(
         added++;
       }
     }
+    for (const word of wordsForKanji(kanji.kanji).slice(0, 12)) addWord(word.kanji, word.kana);
     return { nodes: [...nodes.values()], edges };
   }
 
@@ -102,7 +135,7 @@ export function buildGraph(
 
 export function graphToCytoscapeElements(graph: { nodes: GraphNode[]; edges: GraphEdge[] }) {
   const elements: any[] = graph.nodes.map((n) => ({
-    data: { id: n.id, kind: n.kind, label: n.id, name: n.name, meaning: n.meaning },
+    data: { id: n.id, kind: n.kind, label: n.label ?? n.id, reading: n.reading, name: n.name, meaning: n.meaning },
   }));
   for (const e of graph.edges) {
     elements.push({

@@ -2,6 +2,12 @@ import { useEffect, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { search, type SearchHit } from "@/lib/search";
 import { useI18n } from "@/lib/i18n";
+import { wordUrl } from "@/lib/data";
+
+function hitUrl(hit: SearchHit): string {
+  if (hit.kind === "word") return wordUrl(hit.character, hit.reading ?? "");
+  return hit.kind === "kanji" ? `/kanji/${hit.character}` : `/radical/${hit.key}`;
+}
 
 export default function SearchBar() {
   const [query, setQuery] = useState("");
@@ -70,7 +76,7 @@ export default function SearchBar() {
               if (hit) {
                 setOpen(false);
                 setQuery("");
-                navigate(hit.kind === "kanji" ? `/kanji/${hit.character}` : `/radical/${hit.key}`);
+                navigate(hitUrl(hit));
               }
               return;
             }
@@ -91,7 +97,7 @@ export default function SearchBar() {
               onClick={() => {
                 setOpen(false);
                 setQuery("");
-                navigate(hit.kind === "kanji" ? `/kanji/${hit.character}` : `/radical/${hit.key}`);
+                navigate(hitUrl(hit));
               }}
             >
               <span className={`result-char kind-${hit.kind}`} lang="ja">{hit.character}</span>

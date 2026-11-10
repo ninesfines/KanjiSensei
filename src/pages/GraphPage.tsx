@@ -8,24 +8,27 @@ const COLORS: Record<string, { bg: string; border: string; size: number }> = {
   radical: { bg: "#f43f5e", border: "#fda4af", size: 30 },
   component: { bg: "#38bdf8", border: "#7dd3fc", size: 24 },
   kanji: { bg: "#1e293b", border: "#7db2f9", size: 36 },
+  word: { bg: "#14532d", border: "#86efac", size: 44 },
 };
 
 const EDGE_COLOR: Record<string, string> = {
   contains: "#475569",
   uses: "#b45309",
+  forms: "#16a34a",
 };
 
 export default function GraphPage() {
   const { language, t } = useI18n();
   const [params] = useSearchParams();
-  const kind = (params.get("kind") === "radical" ? "radical" : "kanji") as "kanji" | "radical";
-  const char = params.get("kanji") ?? params.get("char") ?? "家";
+  const kind = params.get("kind") === "word" ? "word" : params.get("kind") === "radical" ? "radical" : "kanji";
+  const char = params.get("form") ?? params.get("kanji") ?? params.get("char") ?? "家";
+  const reading = params.get("reading") ?? "";
   const navigate = useNavigate();
   const containerRef = useRef<HTMLDivElement>(null);
   const cyRef = useRef<cytoscape.Core | null>(null);
   const [tooBig, setTooBig] = useState(false);
   const [tip, setTip] = useState<null | {
-    id: string;
+    label: string;
     kind: string;
     name?: string;
     meaning?: string;
@@ -39,7 +42,7 @@ export default function GraphPage() {
   );
 
   useEffect(() => {
-    const graph = buildGraph({ kind, character: char }, { limitPerRadical: 16, language });
+    const graph = buildGraph({ kind, character: char, reading }, { limitPerRadical: 16, language });
     if (!containerRef.current) return;
     const cy = cytoscape({
       container: containerRef.current,
@@ -80,6 +83,10 @@ export default function GraphPage() {
           },
         },
         {
+          selector: 'node[kind = "word"]',
+          style: { "background-color": COLORS.word.bg, "border-color": COLORS.word.border, width: 66, height: 50, "font-size": 15, shape: "round-rectangle" },
+        },
+        {
           // hovered node grows + thickens (class toggled from mouseover JS;
           // Cytoscape has no :hover selector state)
           selector: "node.hover",
@@ -103,6 +110,10 @@ export default function GraphPage() {
           selector: 'edge[kind = "uses"]',
           style: { "line-color": EDGE_COLOR.uses, width: 2.2 },
         },
+        {
+          selector: 'edge[kind = "forms"]',
+          style: { "line-color": EDGE_COLOR.forms, width: 2 },
+        },
       ],
     }) as cytoscape.Core;
 
@@ -122,7 +133,7 @@ export default function GraphPage() {
       const width = containerRef.current?.getBoundingClientRect().width ?? 500;
       const maxX = Math.max(160, width - 160);
       setTip({
-        id: node.id() as string,
+        label: node.data("label") as string,
         kind: node.data("kind") as string,
         name: node.data("name") || undefined,
         meaning: node.data("meaning") || undefined,
@@ -142,7 +153,7 @@ export default function GraphPage() {
       setTip(null);
       void cy.destroy();
     };
-  }, [kind, char, navigate, reduceMotion, language]);
+  }, [kind, char, reading, navigate, reduceMotion, language]);
 
   return (
     <article className="graph-page page">
@@ -160,8 +171,8 @@ export default function GraphPage() {
             style={{ left: tip.x, top: tip.y }}
             aria-hidden="true"
           >
-            <span className="tip-char" lang="ja">{tip.id}</span>
-            <span className={`tip-kind kind-${tip.kind}`}>{t(`graph.${tip.kind}` as "graph.radical" | "graph.component" | "graph.kanji")}</span>
+            <span className="tip-char" lang="ja">{tip.label}</span>
+            <span className={`tip-kind kind-${tip.kind}`}>{t(`graph.${tip.kind}` as "graph.radical" | "graph.component" | "graph.kanji" | "graph.word")}</span>
             {tip.name ? <span className="tip-name">{tip.name}</span> : null}
             {tip.meaning ? <span className="tip-meaning">{tip.meaning}</span> : null}
           </div>
@@ -171,12 +182,17 @@ export default function GraphPage() {
         <span className="legend-item"><i className="dot radical" />{t("graph.radical")}</span>
         <span className="legend-item"><i className="dot component" />{t("graph.component")}</span>
         <span className="legend-item"><i className="dot kanji" />{t("graph.kanji")}</span>
+        <span className="legend-item"><i className="dot word" />{t("graph.word")}</span>
       </div>
     </article>
   );
 }
 
 function nodeKindRoute(nodeKind: string, id: string): string {
+  if (nodeKind === "word") {
+    const [form, reading] = id.slice(5).split(":");
+    return `/word?form=${form}&reading=${reading}`;
+  }
   if (nodeKind === "kanji") return `/kanji/${id}`;
   if (nodeKind === "radical") return `/radical/${id}`;
   return `/radical/${encodeURIComponent(id)}`;
