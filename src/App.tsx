@@ -11,6 +11,7 @@ import NotFound from "./pages/NotFound";
 
 const GraphPage = lazy(() => import("./pages/GraphPage"));
 const PracticePage = lazy(() => import("./pages/PracticePage"));
+const FamiliesPage = lazy(() => import("./pages/FamiliesPage"));
 
 export default function App() {
   return (
@@ -20,6 +21,7 @@ export default function App() {
         <Route path="/kanji/:char" element={<KanjiPage />} />
         <Route path="/radical/:char" element={<RadicalPage />} />
         <Route path="/browse" element={<BrowsePage />} />
+        <Route path="/families" element={<Suspense fallback={<div className="page muted">…</div>}><FamiliesPage /></Suspense>} />
         <Route path="/words" element={<WordsPage />} />
         <Route path="/word" element={<WordPage />} />
         <Route

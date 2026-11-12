@@ -1,0 +1,54 @@
+.comparison-panel { margin: 1.5rem 0; padding: 1.15rem; border: 1px solid var(--border); border-radius: var(--radius, 12px); background: var(--bg-panel); color: var(--text); container-type: inline-size; }
+.comparison-panel h2 { margin: 0 0 .85rem; font-size: 1.2rem; }
+.comparison-empty { margin: 0 0 .75rem; color: var(--text-dim); }
+.comparison-summary { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; margin-bottom: 1rem; }
+.comparison-summary section { min-width: 0; }
+.comparison-summary h3, .comparison-card h4 { margin: 0 0 .35rem; font-size: .9rem; }
+.comparison-chips { display: flex; flex-wrap: wrap; gap: .35rem; align-items: center; }
+.comparison-chip { display: inline-flex; padding: .16rem .48rem; border-radius: 999px; font-size: .82rem; line-height: 1.35; }
+.comparison-chip.is-shared { color: var(--accent); background: color-mix(in srgb, var(--accent) 14%, var(--bg-elevated)); border: 1px solid color-mix(in srgb, var(--accent) 40%, transparent); }
+.comparison-chip.is-different { color: #e8b45c; background: color-mix(in srgb, #e8a83e 14%, var(--bg-elevated)); border: 1px solid color-mix(in srgb, #e8a83e 42%, transparent); }
+.comparison-highlight { grid-column: 1 / -1; margin: .2rem 0 0; color: var(--text-dim); font-size: .84rem; }
+.comparison-columns { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.comparison-card { min-width: 0; padding: .9rem; border: 1px solid var(--border); border-radius: var(--radius, 12px); background: var(--bg-elevated); }
+.comparison-card-head { display: flex; align-items: center; gap: .7rem; }
+.comparison-card-head > div { min-width: 0; flex: 1; }
+.comparison-card-head h3 { margin: 0; font-size: 1.1rem; }
+.comparison-card-head p { margin: .1rem 0 0; }
+.comparison-card-head button { align-self: flex-start; border: 0; background: transparent; color: inherit; cursor: pointer; font-size: 1.2rem; }
+.family-glyph { display: inline-flex; flex: 0 0 3rem; width: 3rem; height: 3rem; align-items: center; justify-content: center; color: var(--text); }
+.family-glyph svg { width: 100%; height: 100%; overflow: visible; }
+.family-glyph path { fill: none; stroke: #7c8798; stroke-width: 3.2; stroke-linecap: round; stroke-linejoin: round; }
+.family-glyph path.is-shared { stroke: var(--accent); }
+.family-glyph path.is-different { stroke: #e8a83e; }
+.family-glyph-fallback { font-size: 2.5rem; line-height: 1; }
+.comparison-meta { margin: .35rem 0 .65rem; color: var(--text-dim); font-size: .85rem; }
+.comparison-readings { margin: .6rem 0; }
+.comparison-readings p { margin: .2rem 0; overflow-wrap: anywhere; font-size: .87rem; }
+.comparison-card-components { margin: .6rem 0; line-height: 2; font-size: .85rem; }
+.comparison-label { color: var(--text-dim); }
+.comparison-words ul { margin: .35rem 0; padding-left: 1.15rem; }
+.comparison-words li { margin: .3rem 0; font-size: .84rem; overflow-wrap: anywhere; }
+.comparison-words a, .comparison-link { color: var(--accent); }
+.comparison-link { display: inline-block; margin-top: .5rem; font-size: .88rem; }
+@media (max-width: 620px) { .comparison-panel { padding: .85rem; } .comparison-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .65rem .45rem; } }
+@container (max-width: 430px) { .comparison-columns { grid-template-columns: 1fr; } .comparison-card { padding: .7rem; } .comparison-card-head { gap: .5rem; } .family-glyph { flex-basis: 2.5rem; width: 2.5rem; height: 2.5rem; } .comparison-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .6rem .35rem; } .comparison-panel h2 { font-size: 1rem; } .comparison-summary h3 { font-size: .78rem; } }
+.comparison-card-head small { display: block; margin-top: .15rem; color: var(--text-dim); font-size: .72rem; line-height: 1.2; }
+.comparison-details { margin-top: .55rem; border-top: 1px solid var(--border); padding-top: .45rem; }
+.comparison-details > summary, .comparison-all-readings > summary { color: var(--accent); cursor: pointer; font-size: .8rem; }
+.comparison-shared-readings { grid-column: 1 / -1; }
+.comparison-all-readings { grid-column: 1 / -1; margin-top: .2rem; }
+@container (max-width: 430px) {
+  .comparison-columns { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .45rem; }
+  .comparison-card { padding: .5rem; }
+  .comparison-card-head { gap: .35rem; align-items: flex-start; }
+  .family-glyph { flex-basis: 2rem; width: 2rem; height: 2rem; }
+  .family-glyph-fallback { font-size: 2rem; }
+  .comparison-card-head h3 { font-size: 1rem; }
+  .comparison-card-head p { font-size: .78rem; overflow-wrap: anywhere; }
+  .comparison-card-head button { padding: 0; font-size: 1rem; }
+  .comparison-link { font-size: .75rem; }
+  .comparison-summary { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .55rem .35rem; }
+  .comparison-summary h3 { font-size: .76rem; }
+  .comparison-chip { padding: .12rem .35rem; font-size: .73rem; }
+}

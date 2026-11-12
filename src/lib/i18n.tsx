@@ -4,6 +4,7 @@ export type Language = "en" | "es";
 
 const translations = {
   en: {
+    "nav.families": "Families", "kanji.families": "Compare component family", "kanji.wordConnections": "Kanji used together",
     "nav.browse": "Browse", "nav.words": "Words", "nav.graph": "Graph", "nav.practice": "Practice",
     "search.placeholder": "Search kanji, words, meanings, readings…", "search.results": "Search results",
     "language.label": "Language", "language.english": "English", "language.spanish": "Español",
@@ -54,6 +55,7 @@ const translations = {
     "strokes": "strokes", "content.englishLabel": "English",
   },
   es: {
+    "nav.families": "Familias", "kanji.families": "Comparar familia de componentes", "kanji.wordConnections": "Kanji que forman palabras juntos",
     "nav.browse": "Explorar", "nav.words": "Palabras", "nav.graph": "Grafo", "nav.practice": "Práctica",
     "search.placeholder": "Buscar kanji, palabras, significados, lecturas…", "search.results": "Resultados de búsqueda",
     "language.label": "Idioma", "language.english": "English", "language.spanish": "Español",

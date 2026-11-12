@@ -315,6 +315,12 @@ function RelatedPanel({ data }: { data: KanjiRecord }) {
     <section className="panel">
       <h2 className="panel-title">{t("kanji.related")}</h2>
       <div className="btn-row">
+        <Link className="btn" to={`/families?mode=component&family=${encodeURIComponent(data.components.find(c => c.role === "phonetic")?.canonical ?? data.radical.character)}&compare=${encodeURIComponent(data.kanji)}`}>
+          {t("kanji.families")}
+        </Link>
+        <Link className="btn" to={`/families?mode=words&family=${encodeURIComponent(data.kanji)}&compare=${encodeURIComponent(data.kanji)}`}>
+          {t("kanji.wordConnections")}
+        </Link>
         <Link className="btn" to={`/graph?kind=kanji&kanji=${encodeURIComponent(data.kanji)}`}>
           {t("kanji.graph")}
         </Link>

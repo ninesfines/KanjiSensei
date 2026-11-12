@@ -15,7 +15,7 @@ export default function Layout() {
           </Link>
           <SearchBar />
           <nav className="app-nav">
-            <Link to="/browse">{t("nav.browse")}</Link>
+            <Link to="/families">{t("nav.families")}</Link>
             <Link to="/words">{t("nav.words")}</Link>
             <Link to="/graph?kind=radical&char=%E5%AE%B8">{t("nav.graph")}</Link>
             <Link to="/practice">{t("nav.practice")}</Link>

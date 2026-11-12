@@ -54,6 +54,9 @@ export default function RadicalPage() {
           <span className="panel-sub">{t("radical.allKanji", { char: data.character })}</span>
         </h2>
         <div className="tree-controls">
+          <Link className="btn" to={`/families?mode=component&family=${encodeURIComponent(data.character)}`}>
+            {t("kanji.families")}
+          </Link>
           <button
             className={jōyōOnly ? "toggle on" : "toggle"}
             onClick={() => { setJōyōOnly((v) => !v); setLimit(PAGE_SIZE); }}
